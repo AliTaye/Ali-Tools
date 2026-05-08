@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>CV Maker | صانع السيرة الذاتية</title>
+    <!-- Include Inter & Cairo fonts for English and Arabic typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Include Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Disable double-tap zoom, enforce only two-finger pinch-zoom */
+        html, body {
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        /* Apply Cairo font when direction is RTL (Arabic) */
+        html[dir="rtl"] body {
+            font-family: 'Cairo', sans-serif;
+        }
+
+        /* Print specific styles for PDF conversion */
+        @media print {
+            body { background-color: white; }
+            .no-print { display: none !important; }
+            #preview-panel { padding: 0 !important; background: white !important; }
+            #cv-render-target { gap: 0 !important; padding: 0 !important; display: block !important; }
+            .print-area {
+                width: 100% !important; height: 100% !important;
+                margin: 0 !important; padding: 0 !important;
+                box-shadow: none !important; overflow: visible !important;
+            }
+            .cv-page {
+                width: 210mm !important; height: 297mm !important;
+                box-shadow: none !important; margin: 0 !important;
+                padding: 40px !important; zoom: 1 !important;
+                page-break-after: always; page-break-inside: avoid;
+            }
+            .cv-page:last-child {
+                page-break-after: auto;
+            }
+            @page {
+                margin: 0cm; /* Remove default page margins */
+                size: A4 portrait;
+            }
+        }
+
+        /* CV Page styling to look like A4 on screen */
+        .cv-page {
+            width: 210mm;
+            height: 297mm;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Auto-scale CV to fit entirely on mobile screens */
+        @media screen and (max-width: 768px) {
+            .cv-page {
+                /* 794px is approx 210mm. Subtracting 32px for padding ensures a perfect full fit */
+                zoom: calc((100vw - 32px) / 794);
+            }
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Mobile Sidebar specific CSS for LTR/RTL support */
+        .sidebar {
+            position: fixed;
+            top: 4rem; /* Below Navbar */
+            bottom: 0;
+            z-index: 40;
+            width: 85%;
+            max-width: 400px;
+            background: white;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* Off-canvas positioning logic based on language direction */
+        html[dir="ltr"] .sidebar { left: 0; transform: translateX(-100%); border-right: 1px solid #e5e7eb; }
+        html[dir="rtl"] .sidebar { right: 0; transform: translateX(100%); border-left: 1px solid #e5e7eb; }
+        html[dir="ltr"] .sidebar.open, html[dir="rtl"] .sidebar.open { transform: translateX(0); }
+
+        /* Reset for desktop view */
+        @media (min-width: 768px) {
+            .sidebar {
+                position: relative;
+                top: 0;
+                width: 33.333333%;
+                max-width: none;
+                transform: none !important;
+            }
+            html[dir="ltr"] .sidebar, html[dir="rtl"] .sidebar { left: auto; right: auto; }
+        }
+    </style>
+</head>
+<body class="bg-gray-200 overflow-hidden">
+
+    <!-- Fixed Top Navbar -->
+    <nav class="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 md:px-6 z-50 no-print shadow-sm w-full">
+        <div class="flex items-center gap-2">
+            <!-- App Logo / Title -->
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <h1 class="text-xl md:text-2xl font-bold text-gray-800" data-i18n="cvMaker">CV Maker</h1>
+        </div>
+        
+        <div class="flex items-center gap-2 md:gap-4">
+            <!-- Language Toggle -->
+            <button onclick="toggleLang()" class="text-sm font-bold bg-gray-100 text-gray-700 px-3 py-2 rounded hover:bg-gray-200 transition border border-gray-200" id="lang-btn">عربي</button>
+            
+            <!-- Print / PDF Button -->
+            <button onclick="window.print()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-3 md:px-4 rounded shadow transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                <span class="hidden md:inline" data-i18n="printBtn">Print / Save PDF</span>
+                <span class="md:hidden" data-i18n="printBtnShort">PDF</span>
+            </button>
+
+            <!-- Mobile Burger Menu -->
+            <button onclick="toggleMenu()" class="md:hidden p-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition shadow flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content Area (Offset by pt-16 for the fixed navbar) -->
+    <div class="flex pt-16 h-screen w-full relative">
+        
+        <!-- Mobile Overlay -->
+        <div id="mobile-overlay" class="fixed inset-0 top-16 bg-black bg-opacity-50 z-30 hidden md:hidden no-print transition-opacity" onclick="toggleMenu()"></div>
+
+        <!-- Inputs & Forms Section (Sidebar Panel) -->
+        <div id="sidebar" class="sidebar h-full overflow-y-auto no-print shadow-2xl md:shadow-none bg-white">
+            <div class="p-6">
+                
+                <!-- Personal Information -->
+                <div class="mb-8">
+                    <h2 class="text-lg font-bold text-gray-800 border-b-2 border-gray-100 pb-2 mb-4" data-i18n="personalInfo">Personal Information</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-600 mb-1" data-i18n="fullName">Full Name</label>
+                            <input type="text" id="inp-name" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phName" placeholder="John Doe" value="John Doe" oninput="updateCV()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-600 mb-1" data-i18n="jobTitle">Job Title</label>
+                            <input type="text" id="inp-title" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phJob" placeholder="Software Engineer" value="Software Engineer" oninput="updateCV()">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-600 mb-1" data-i18n="email">Email</label>
+                                <input type="email" id="inp-email" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phEmail" placeholder="email@example.com" value="john@example.com" oninput="updateCV()">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-600 mb-1" data-i18n="phone">Phone</label>
+                                <input type="text" id="inp-phone" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phPhone" placeholder="+1 234 567 890" value="+1 234 567 890" oninput="updateCV()">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-600 mb-1" data-i18n="address">Address</label>
+                            <input type="text" id="inp-address" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phAddress" placeholder="New York, USA" value="New York, USA" oninput="updateCV()">
+                        </div>
+                        
+                        <!-- Social Links & Portfolio Section (Updated to URL + Text) -->
+                        <div class="border-t border-gray-100 pt-4 mt-2">
+                            <h3 class="text-sm font-bold text-gray-800 mb-3" data-i18n="socialLinks">Social Links (URL & Display Text)</h3>
+                            
+                            <!-- LinkedIn -->
+                            <div class="mb-3">
+                                <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="linkedin">LinkedIn</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="url" id="inp-linkedin-url" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phLinkUrl" placeholder="Link URL" value="https://linkedin.com/in/johndoe" oninput="updateCV()">
+                                    <input type="text" id="inp-linkedin-text" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phLinkText" placeholder="Display Text" value="John Doe" oninput="updateCV()">
+                                </div>
+                            </div>
+                            
+                            <!-- GitHub -->
+                            <div class="mb-3">
+                                <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="github">GitHub</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="url" id="inp-github-url" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phLinkUrl" placeholder="Link URL" value="" oninput="updateCV()">
+                                    <input type="text" id="inp-github-text" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phLinkText" placeholder="Display Text" value="" oninput="updateCV()">
+                                </div>
+                            </div>
+
+                            <!-- Portfolio -->
+                            <div class="mb-3">
+                                <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="portfolio">Portfolio</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="url" id="inp-portfolio-url" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phLinkUrl" placeholder="Link URL" value="" oninput="updateCV()">
+                                    <input type="text" id="inp-portfolio-text" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phLinkText" placeholder="Display Text" value="" oninput="updateCV()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-gray-600 mb-1" data-i18n="summary">Professional Summary</label>
+                            <textarea id="inp-summary" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 h-24" data-i18n-placeholder="phSummary" placeholder="Write about yourself..." oninput="updateCV()">Experienced software engineer with a passion for developing innovative programs that expedite the efficiency and effectiveness of organizational success. Well-versed in technology and writing code to create systems that are reliable and user-friendly.</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Work Experience -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center border-b-2 border-gray-100 pb-2 mb-4">
+                        <h2 class="text-lg font-bold text-gray-800" data-i18n="workExp">Work Experience</h2>
+                        <button onclick="addExperience()" class="text-blue-600 text-sm hover:underline font-bold" data-i18n="addExp">+ Add Experience</button>
+                    </div>
+                    <div id="experience-list" class="space-y-4"></div>
+                </div>
+
+                <!-- Education -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center border-b-2 border-gray-100 pb-2 mb-4">
+                        <h2 class="text-lg font-bold text-gray-800" data-i18n="education">Education</h2>
+                        <button onclick="addEducation()" class="text-blue-600 text-sm hover:underline font-bold" data-i18n="addEdu">+ Add Education</button>
+                    </div>
+                    <div id="education-list" class="space-y-4"></div>
+                </div>
+
+                <!-- Certifications -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center border-b-2 border-gray-100 pb-2 mb-4">
+                        <h2 class="text-lg font-bold text-gray-800" data-i18n="certifications">Certifications</h2>
+                        <button onclick="addCertification()" class="text-blue-600 text-sm hover:underline font-bold" data-i18n="addCert">+ Add Certification</button>
+                    </div>
+                    <div id="certification-list" class="space-y-4"></div>
+                </div>
+
+                <!-- Skills -->
+                <div class="mb-8">
+                    <h2 class="text-lg font-bold text-gray-800 border-b-2 border-gray-100 pb-2 mb-4" data-i18n="skills">Skills</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-600 mb-1" data-i18n="hardSkills">Hard Skills (Comma separated)</label>
+                            <textarea id="inp-hard-skills" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 h-20" data-i18n-placeholder="phHard" placeholder="HTML, CSS, JavaScript, React, Node.js" oninput="updateCV()">JavaScript, React, Node.js, Python, SQL, REST APIs, Git</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-600 mb-1" data-i18n="softSkills">Soft Skills (Comma separated)</label>
+                            <textarea id="inp-soft-skills" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 h-20" data-i18n-placeholder="phSoft" placeholder="Problem Solving, Teamwork, Communication" oninput="updateCV()">Problem Solving, Communication, Teamwork, Time Management, Adaptability</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Languages -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center border-b-2 border-gray-100 pb-2 mb-4">
+                        <h2 class="text-lg font-bold text-gray-800" data-i18n="languages">Languages</h2>
+                        <button onclick="addLanguage()" class="text-blue-600 text-sm hover:underline font-bold" data-i18n="addLang">+ Add Language</button>
+                    </div>
+                    <div id="language-list" class="space-y-4"></div>
+                </div>
+
+                <!-- Custom Sections -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center border-b-2 border-gray-100 pb-2 mb-4">
+                        <h2 class="text-lg font-bold text-gray-800" data-i18n="customSections">Custom Sections</h2>
+                        <button onclick="addCustomSection()" class="text-blue-600 text-sm hover:underline font-bold" data-i18n="addCustom">+ Add Custom Section</button>
+                    </div>
+                    <div id="custom-section-list" class="space-y-4"></div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Live Preview Section (Right Panel) -->
+        <div id="preview-panel" class="flex-1 h-full overflow-y-auto p-4 md:p-8 print-area relative bg-gray-200">
+            
+            <!-- Hidden Source CV (Used for logical rendering before pagination) -->
+            <div id="cv-source" class="hidden">
+                
+                <!-- Header -->
+                <div class="cv-header border-b-2 border-gray-800 pb-6 mb-6">
+                    <h1 id="out-name" class="text-4xl font-bold text-gray-900 mb-2">John Doe</h1>
+                    <h2 id="out-title" class="text-xl font-bold text-gray-500 mb-4">Software Engineer</h2>
+                    
+                    <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600">
+                        
+                        <!-- Email Link -->
+                        <a id="out-email-link" href="#" class="flex items-center gap-1.5 hover:text-gray-900 transition cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            <span id="out-email">john@example.com</span>
+                        </a>
+
+                        <!-- Phone Link -->
+                        <a id="out-phone-link" href="#" class="flex items-center gap-1.5 hover:text-gray-900 transition cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                            <span id="out-phone">+1 234 567 890</span>
+                        </a>
+
+                        <!-- Address -->
+                        <div class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            <span id="out-address">New York, USA</span>
+                        </div>
+                        
+                        <!-- Clickable Social Links (No Blue Color) -->
+                        <a id="out-linkedin-link" href="#" target="_blank" class="flex items-center gap-1.5 hover:text-gray-900 transition cursor-pointer">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                            <span id="out-linkedin-text" dir="ltr">John Doe</span>
+                        </a>
+                        <a id="out-github-link" href="#" target="_blank" class="flex items-center gap-1.5 hover:text-gray-900 transition cursor-pointer">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                            <span id="out-github-text" dir="ltr">github.com/johndoe</span>
+                        </a>
+                        <a id="out-portfolio-link" href="#" target="_blank" class="flex items-center gap-1.5 hover:text-gray-900 transition cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                            <span id="out-portfolio-text" dir="ltr">johndoe.com</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Dynamic Sections Container -->
+                <div id="cv-sections-container" class="flex flex-col gap-6">
+                    
+                    <!-- Summary -->
+                    <div id="section-summary" class="cv-section" data-weight="10">
+                        <h3 class="text-lg font-bold text-gray-900 border-b border-gray-300 pb-1 mb-3 uppercase tracking-wider" data-i18n="summary">Professional Summary</h3>
+                        <div class="section-content">
+                            <p id="out-summary" class="item text-gray-700 leading-relaxed text-justify">
+                                <!-- Summary text -->
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Experience -->
+                    <div id="section-experience" class="cv-section" data-weight="20">
+                        <h3 class="text-lg font-bold text-gray-900 border-b border-gray-300 pb-1 mb-3 uppercase tracking-wider" data-i18n="workExp">Experience</h3>
+                        <div id="out-experience" class="section-content space-y-4">
+                            <!-- Experiences rendered here -->
+                        </div>
+                    </div>
+
+                    <!-- Education -->
+                    <div id="section-education" class="cv-section" data-weight="30">
+                        <h3 class="text-lg font-bold text-gray-900 border-b border-gray-300 pb-1 mb-3 uppercase tracking-wider" data-i18n="education">Education</h3>
+                        <div id="out-education" class="section-content space-y-4">
+                            <!-- Education rendered here -->
+                        </div>
+                    </div>
+
+                    <!-- Certifications -->
+                    <div id="certifications-section" class="cv-section" data-weight="40">
+                        <h3 class="text-lg font-bold text-gray-900 border-b border-gray-300 pb-1 mb-3 uppercase tracking-wider" data-i18n="certifications">Certifications</h3>
+                        <div id="out-certifications" class="section-content space-y-3">
+                            <!-- Certifications rendered here -->
+                        </div>
+                    </div>
+
+                    <!-- Skills -->
+                    <div id="section-skills" class="cv-section" data-weight="50">
+                        <h3 class="text-lg font-bold text-gray-900 border-b border-gray-300 pb-1 mb-3 uppercase tracking-wider" data-i18n="skills">Skills</h3>
+                        <div class="section-content grid grid-cols-2 gap-6 mt-3">
+                            <!-- Hard Skills -->
+                            <div id="hard-skills-section" class="item">
+                                <h4 class="font-bold text-gray-800 mb-2" data-i18n="hardSkillsHeader">Hard Skills</h4>
+                                <ul id="out-hard-skills" class="list-disc list-inside text-gray-700 space-y-1 text-sm">
+                                    <!-- Hard Skills Rendered -->
+                                </ul>
+                            </div>
+                            <!-- Soft Skills -->
+                            <div id="soft-skills-section" class="item">
+                                <h4 class="font-bold text-gray-800 mb-2" data-i18n="softSkillsHeader">Soft Skills</h4>
+                                <ul id="out-soft-skills" class="list-disc list-inside text-gray-700 space-y-1 text-sm">
+                                    <!-- Soft Skills Rendered -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Languages -->
+                    <div id="section-languages" class="cv-section" data-weight="60">
+                        <h3 class="text-lg font-bold text-gray-900 border-b border-gray-300 pb-1 mb-3 uppercase tracking-wider" data-i18n="languages">Languages</h3>
+                        <div id="out-languages" class="section-content grid grid-cols-2 gap-x-6 gap-y-2">
+                            <!-- Languages rendered here -->
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+            
+            <!-- Render Target for Paginated Pages -->
+            <div id="cv-render-target" class="flex flex-col gap-8 pb-8 items-center w-full">
+                <!-- JS will generate .cv-page elements here -->
+            </div>
+
+        </div>
+
+    </div> <!-- End Main Content Wrapper -->
+
+    <script>
+        // Dictionary for i18n
+        const translations = {
+            en: {
+                cvMaker: "CV Maker", printBtn: "Print / Save PDF", printBtnShort: "PDF", langBtn: "عربي",
+                personalInfo: "Personal Information",
+                fullName: "Full Name", phName: "John Doe",
+                jobTitle: "Job Title", phJob: "Software Engineer",
+                email: "Email", phEmail: "email@example.com",
+                phone: "Phone", phPhone: "+1 234 567 890",
+                address: "Address", phAddress: "New York, USA",
+                socialLinks: "Social Links (URL & Display Text)",
+                linkedin: "LinkedIn", github: "GitHub", portfolio: "Portfolio",
+                phLinkUrl: "Link URL", phLinkText: "Display Text (e.g. John Doe)",
+                summary: "Professional Summary", phSummary: "Write about yourself...",
+                workExp: "Experience", addExp: "+ Add Experience",
+                education: "Education", addEdu: "+ Add Education",
+                certifications: "Certifications", addCert: "+ Add Certification",
+                skills: "Skills",
+                hardSkills: "Hard Skills (Comma separated)", phHard: "HTML, CSS, JavaScript, React, Node.js", hardSkillsHeader: "Hard Skills",
+                softSkills: "Soft Skills (Comma separated)", phSoft: "Problem Solving, Teamwork, Communication", softSkillsHeader: "Soft Skills",
+                phExpTitle: "Job Title", phExpCompany: "Company", phExpDate: "Date (e.g. 2020 - Present)", phExpDesc: "Job description and achievements...",
+                phEduDegree: "Degree / Field of Study", phEduInst: "Institution", phEduDate: "Graduation Year",
+                phCertName: "Certification Name", phCertIssuer: "Issuing Organization", phCertMonth: "Month (e.g. Feb)", phCertDate: "Year",
+                languages: "Languages", addLang: "+ Add Language", phLangName: "Language (e.g. English)", phLangLevel: "Level (e.g. Fluent)",
+                customSections: "Custom Sections", addCustom: "+ Add Custom Section", phCustomTitle: "Section Title", phCustomContent: "Section Content", position: "Position",
+                posBeforeSum: "Before Summary", posAfterSum: "After Summary", posAfterExp: "After Experience", posAfterEdu: "After Education", posAfterCert: "After Certifications", posAfterSkills: "After Skills", posAfterLang: "After Languages", posEnd: "At the End"
+            },
+            ar: {
+                cvMaker: "صانع السيرة", printBtn: "طباعة / PDF", printBtnShort: "PDF", langBtn: "English",
+                personalInfo: "المعلومات الشخصية",
+                fullName: "الاسم الكامل", phName: "أحمد محمد",
+                jobTitle: "المسمى الوظيفي", phJob: "مهندس برمجيات",
+                email: "البريد الإلكتروني", phEmail: "email@example.com",
+                phone: "رقم الهاتف", phPhone: "0500000000",
+                address: "العنوان", phAddress: "الرياض، السعودية",
+                socialLinks: "الروابط والمواقع (الرابط والنص المعروض)",
+                linkedin: "لينكد إن", github: "جيت هاب", portfolio: "رابط الموقع",
+                phLinkUrl: "رابط الموقع", phLinkText: "النص المعروض (مثال: علي طيب)",
+                summary: "الملخص المهني", phSummary: "اكتب نبذة عنك...",
+                workExp: "الخبرات", addExp: "+ إضافة خبرة",
+                education: "التعليم", addEdu: "+ إضافة تعليم",
+                certifications: "الشهادات", addCert: "+ إضافة شهادة",
+                skills: "المهارات",
+                hardSkills: "المهارات التقنية (مفصول بفاصلة)", phHard: "برمجة، تصميم، جافاسكربت...", hardSkillsHeader: "المهارات التقنية",
+                softSkills: "المهارات الشخصية (مفصول بفاصلة)", phSoft: "حل المشكلات، العمل الجماعي...", softSkillsHeader: "المهارات الشخصية",
+                phExpTitle: "المسمى الوظيفي", phExpCompany: "الشركة", phExpDate: "التاريخ (مثال: 2020 - الحاضر)", phExpDesc: "وصف المهام والإنجازات...",
+                phEduDegree: "الدرجة العلمية / التخصص", phEduInst: "المؤسسة التعليمية", phEduDate: "سنة التخرج",
+                phCertName: "اسم الشهادة", phCertIssuer: "الجهة المانحة", phCertMonth: "الشهر (مثال: فبراير)", phCertDate: "السنة",
+                languages: "اللغات", addLang: "+ إضافة لغة", phLangName: "اللغة (مثال: الإنجليزية)", phLangLevel: "المستوى (مثال: طليق)",
+                customSections: "أقسام مخصصة", addCustom: "+ إضافة قسم مخصص", phCustomTitle: "عنوان القسم", phCustomContent: "محتوى القسم", position: "المكان",
+                posBeforeSum: "قبل الملخص", posAfterSum: "بعد الملخص", posAfterExp: "بعد الخبرات", posAfterEdu: "بعد التعليم", posAfterCert: "بعد الشهادات", posAfterSkills: "بعد المهارات", posAfterLang: "بعد اللغات", posEnd: "في النهاية"
+            }
+        };
+
+        let currentLang = 'en';
+        let menuOpen = false;
+
+        // Mobile Menu Toggle Logic
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            menuOpen = !menuOpen;
+            
+            if (menuOpen) {
+                sidebar.classList.add('open');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.remove('open');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        // Language Toggle Logic
+        function toggleLang() {
+            currentLang = currentLang === 'en' ? 'ar' : 'en';
+            
+            // Change direction and lang attributes
+            document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+            document.documentElement.lang = currentLang;
+
+            applyTranslations();
+        }
+
+        function applyTranslations() {
+            const t = translations[currentLang];
+            
+            // Translate static texts
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) el.innerText = t[key];
+            });
+
+            // Translate placeholders
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (t[key]) el.placeholder = t[key];
+            });
+
+            // Translate dynamic input placeholders
+            document.querySelectorAll('.exp-title').forEach(el => el.placeholder = t.phExpTitle);
+            document.querySelectorAll('.exp-company').forEach(el => el.placeholder = t.phExpCompany);
+            document.querySelectorAll('.exp-date').forEach(el => el.placeholder = t.phExpDate);
+            document.querySelectorAll('.exp-desc').forEach(el => el.placeholder = t.phExpDesc);
+            
+            document.querySelectorAll('.edu-degree').forEach(el => el.placeholder = t.phEduDegree);
+            document.querySelectorAll('.edu-inst').forEach(el => el.placeholder = t.phEduInst);
+            document.querySelectorAll('.edu-date').forEach(el => el.placeholder = t.phEduDate);
+
+            document.querySelectorAll('.cert-name').forEach(el => el.placeholder = t.phCertName);
+            document.querySelectorAll('.cert-issuer').forEach(el => el.placeholder = t.phCertIssuer);
+            document.querySelectorAll('.cert-month').forEach(el => el.placeholder = t.phCertMonth);
+            document.querySelectorAll('.cert-date').forEach(el => el.placeholder = t.phCertDate);
+
+            // Translate languages & custom section inputs
+            document.querySelectorAll('.lang-name').forEach(el => el.placeholder = t.phLangName);
+            document.querySelectorAll('.lang-level').forEach(el => el.placeholder = t.phLangLevel);
+            document.querySelectorAll('.custom-title').forEach(el => el.placeholder = t.phCustomTitle);
+            document.querySelectorAll('.custom-content').forEach(el => el.placeholder = t.phCustomContent);
+            document.querySelectorAll('.custom-pos option').forEach(opt => {
+                const key = opt.getAttribute('data-i18n');
+                if (t[key]) opt.innerText = t[key];
+            });
+
+            // Update language toggle buttons
+            document.getElementById('lang-btn').innerText = t.langBtn;
+            updateCV();
+        }
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            if(window.innerWidth >= 768 && menuOpen) {
+                toggleMenu(); // Close mobile menu if resized to desktop
+            }
+        });
+
+        // Helper to generate unique IDs
+        const generateId = () => Math.random().toString(36).substr(2, 9);
+        const cleanUrl = (url) => url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+
+        // Move Item Logic (Up/Down)
+        function moveItemUp(btn) {
+            const item = btn.closest('.cv-entry-item');
+            const prev = item.previousElementSibling;
+            if (prev && prev.classList.contains('cv-entry-item')) {
+                item.parentNode.insertBefore(item, prev);
+                updateCV();
+            }
+        }
+
+        function moveItemDown(btn) {
+            const item = btn.closest('.cv-entry-item');
+            const next = item.nextElementSibling;
+            if (next && next.classList.contains('cv-entry-item')) {
+                item.parentNode.insertBefore(next, item);
+                updateCV();
+            }
+        }
+
+        // Shared HTML for Reordering & Deleting buttons
+        const getControlsHTML = () => `
+            <div class="flex justify-end gap-1.5 mb-2">
+                <button onclick="moveItemUp(this)" class="text-gray-500 hover:text-blue-600 bg-gray-200 hover:bg-blue-100 rounded w-7 h-7 flex items-center justify-center transition shadow-sm" title="Move Up">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                </button>
+                <button onclick="moveItemDown(this)" class="text-gray-500 hover:text-blue-600 bg-gray-200 hover:bg-blue-100 rounded w-7 h-7 flex items-center justify-center transition shadow-sm" title="Move Down">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <button onclick="this.closest('.cv-entry-item').remove(); updateCV();" class="text-red-500 hover:text-red-700 bg-red-100 hover:bg-red-200 rounded w-7 h-7 flex items-center justify-center font-bold transition text-lg shadow-sm" title="Delete">&times;</button>
+            </div>
+        `;
+
+        // Initial Data
+        const initialExperience = [
+            { id: generateId(), title: 'Senior Software Engineer', company: 'Tech Solutions Inc.', date: '2020 - Present', desc: 'Developed and maintained scalable web applications using React and Node.js. Improved overall application performance by 30%.' }
+        ];
+
+        const initialEducation = [
+            { id: generateId(), degree: 'Bachelor of Science in Computer Science', institution: 'University of Technology', date: '2016 - 2020' }
+        ];
+
+        const initialCertifications = [
+            { id: generateId(), name: 'AWS Certified Solutions Architect', issuer: 'Amazon Web Services', month: 'Feb', date: '2022' }
+        ];
+
+        const initialLanguages = [
+            { id: generateId(), name: 'English', level: 'Fluent' },
+            { id: generateId(), name: 'Arabic', level: 'Native' }
+        ];
+
+        // Initialize on load
+        window.onload = () => {
+            initialExperience.forEach(exp => renderExperienceInput(exp));
+            initialEducation.forEach(edu => renderEducationInput(edu));
+            initialCertifications.forEach(cert => renderCertificationInput(cert));
+            initialLanguages.forEach(lang => renderLanguageInput(lang));
+            updateCV();
+        };
+
+        // Main Update Function
+        function updateCV() {
+            // Text Updates
+            document.getElementById('out-name').innerText = document.getElementById('inp-name').value || (currentLang === 'en' ? 'Full Name' : 'الاسم الكامل');
+            document.getElementById('out-title').innerText = document.getElementById('inp-title').value || (currentLang === 'en' ? 'Job Title' : 'المسمى الوظيفي');
+            document.getElementById('out-address').innerText = document.getElementById('inp-address').value || (currentLang === 'en' ? 'Address' : 'العنوان');
+            document.getElementById('out-summary').innerText = document.getElementById('inp-summary').value || '...';
+
+            // Contact Info (Clickable Email & Phone)
+            const emailVal = document.getElementById('inp-email').value;
+            document.getElementById('out-email').innerText = emailVal || 'Email';
+            document.getElementById('out-email-link').href = emailVal ? `mailto:${emailVal}` : '#';
+
+            const phoneVal = document.getElementById('inp-phone').value;
+            document.getElementById('out-phone').innerText = phoneVal || 'Phone';
+            document.getElementById('out-phone-link').href = phoneVal ? `tel:${phoneVal}` : '#';
+
+            // Link Update Helper Function (Uses display text instead of full URL)
+            const updateSocialLink = (linkId, textId, urlInputId, textInputId) => {
+                const url = document.getElementById(urlInputId).value;
+                const text = document.getElementById(textInputId).value;
+                const el = document.getElementById(linkId);
+                const cleanUrlStr = url.trim();
+                
+                if (cleanUrlStr) {
+                    el.style.display = 'flex';
+                    // Apply protocol if missing
+                    el.href = cleanUrlStr.startsWith('http') ? cleanUrlStr : 'https://' + cleanUrlStr;
+                    // Show custom text if available, otherwise show clean URL
+                    document.getElementById(textId).innerText = text.trim() ? text.trim() : cleanUrl(cleanUrlStr);
+                } else {
+                    el.style.display = 'none';
+                }
+            };
+
+            updateSocialLink('out-linkedin-link', 'out-linkedin-text', 'inp-linkedin-url', 'inp-linkedin-text');
+            updateSocialLink('out-github-link', 'out-github-text', 'inp-github-url', 'inp-github-text');
+            updateSocialLink('out-portfolio-link', 'out-portfolio-text', 'inp-portfolio-url', 'inp-portfolio-text');
+
+            // Skills Formatting
+            const formatSkills = (text) => {
+                if (!text.trim()) return '';
+                return text.split(',').map(s => s.trim()).filter(s => s).map(skill => `<li>${skill}</li>`).join('');
+            };
+
+            const hardSkillsText = document.getElementById('inp-hard-skills').value;
+            const softSkillsText = document.getElementById('inp-soft-skills').value;
+
+            document.getElementById('out-hard-skills').innerHTML = formatSkills(hardSkillsText);
+            document.getElementById('out-soft-skills').innerHTML = formatSkills(softSkillsText);
+
+            document.getElementById('hard-skills-section').style.display = hardSkillsText.trim() ? 'block' : 'none';
+            document.getElementById('soft-skills-section').style.display = softSkillsText.trim() ? 'block' : 'none';
+
+            renderExperienceOutput();
+            renderEducationOutput();
+            renderCertificationOutput();
+            renderLanguageOutput();
+            
+            // Handle Custom Sections & Main Sorting
+            sortAndRenderAllSections();
+
+            // Paginate content into physical A4 pages
+            paginateCV();
+        }
+
+        function sortAndRenderAllSections() {
+            const container = document.getElementById('cv-sections-container');
+            if(!container) return;
+
+            // Update visibility of standard sections before sorting
+            document.getElementById('section-summary').style.display = document.getElementById('inp-summary').value.trim() ? 'block' : 'none';
+            document.getElementById('section-experience').style.display = document.getElementById('out-experience').innerHTML.trim() ? 'block' : 'none';
+            document.getElementById('section-education').style.display = document.getElementById('out-education').innerHTML.trim() ? 'block' : 'none';
+            document.getElementById('certifications-section').style.display = document.getElementById('out-certifications').innerHTML.trim() ? 'block' : 'none';
+            document.getElementById('section-skills').style.display = (document.getElementById('inp-hard-skills').value.trim() || document.getElementById('inp-soft-skills').value.trim()) ? 'block' : 'none';
+            document.getElementById('section-languages').style.display = document.getElementById('out-languages').innerHTML.trim() ? 'block' : 'none';
+
+            // Clear previous custom section outputs
+            container.querySelectorAll('.custom-section-out').forEach(el => el.remove());
+
+            // Build array of all standard sections
+            const allSections = [
+                document.getElementById('section-summary'),
+                document.getElementById('section-experience'),
+                document.getElementById('section-education'),
+                document.getElementById('certifications-section'),
+                document.getElementById('section-skills'),
+                document.getElementById('section-languages')
+            ];
+
+            // Generate custom section elements and add to array
+            document.querySelectorAll('.custom-item').forEach((item, index) => {
+                const title = item.querySelector('.custom-title').value.trim();
+                const content = item.querySelector('.custom-content').value.trim();
+                const weight = parseInt(item.querySelector('.custom-pos').value);
+
+                if(title || content) {
+                    const div = document.createElement('div');
+                    div.className = 'cv-section custom-section-out';
+                    div.dataset.weight = weight + (index * 0.01); // Minor offset for stable sorting
+                    div.innerHTML = `
+                        <h3 class="text-lg font-bold text-gray-900 border-b border-gray-300 pb-1 mb-3 uppercase tracking-wider">${title}</h3>
+                        <div class="section-content">
+                            <p class="item text-sm text-gray-700 leading-relaxed text-justify whitespace-pre-line">${content}</p>
+                        </div>
+                    `;
+                    allSections.push(div);
+                }
+            });
+
+            // Sort all by weight
+            allSections.sort((a, b) => parseFloat(a.dataset.weight) - parseFloat(b.dataset.weight));
+
+            // Append to container (appendChild moves them to their sorted order natively)
+            allSections.forEach(sec => {
+                if(sec) container.appendChild(sec);
+            });
+        }
+
+        /* --- Experience Section --- */
+        function renderExperienceInput(data = { id: generateId(), title: '', company: '', date: '', desc: '' }) {
+            const t = translations[currentLang];
+            const container = document.getElementById('experience-list');
+            const div = document.createElement('div');
+            // Added cv-entry-item class
+            div.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200 exp-item mb-3 shadow-sm cv-entry-item';
+            div.dataset.id = data.id;
+            
+            div.innerHTML = `
+                ${getControlsHTML()}
+                <input type="text" class="exp-title w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" placeholder="${t.phExpTitle}" value="${data.title}" oninput="updateCV()">
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <input type="text" class="exp-company w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" placeholder="${t.phExpCompany}" value="${data.company}" oninput="updateCV()">
+                    <input type="text" class="exp-date w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" placeholder="${t.phExpDate}" value="${data.date}" oninput="updateCV()">
+                </div>
+                <textarea class="exp-desc w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm h-16" placeholder="${t.phExpDesc}" oninput="updateCV()">${data.desc}</textarea>
+            `;
+            container.appendChild(div);
+        }
+
+        function addExperience() { renderExperienceInput(); updateCV(); }
+
+        function renderExperienceOutput() {
+            const outContainer = document.getElementById('out-experience');
+            outContainer.innerHTML = '';
+            
+            document.querySelectorAll('.exp-item').forEach(item => {
+                const title = item.querySelector('.exp-title').value;
+                const company = item.querySelector('.exp-company').value;
+                const date = item.querySelector('.exp-date').value;
+                const desc = item.querySelector('.exp-desc').value;
+
+                if(title || company) {
+                    const div = document.createElement('div');
+                    div.className = 'item';
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start mb-1">
+                            <h4 class="font-bold text-gray-800 text-md">${title}</h4>
+                            <span class="text-sm font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded" dir="ltr">${date}</span>
+                        </div>
+                        <h5 class="font-bold text-gray-600 text-sm mb-2">${company}</h5>
+                        <p class="text-sm text-gray-700 leading-relaxed text-justify whitespace-pre-line">${desc}</p>
+                    `;
+                    outContainer.appendChild(div);
+                }
+            });
+        }
+
+        /* --- Education Section --- */
+        function renderEducationInput(data = { id: generateId(), degree: '', institution: '', date: '' }) {
+            const t = translations[currentLang];
+            const container = document.getElementById('education-list');
+            const div = document.createElement('div');
+            // Added cv-entry-item class
+            div.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200 edu-item mb-3 shadow-sm cv-entry-item';
+            div.dataset.id = data.id;
+            
+            div.innerHTML = `
+                ${getControlsHTML()}
+                <input type="text" class="edu-degree w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" placeholder="${t.phEduDegree}" value="${data.degree}" oninput="updateCV()">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" class="edu-inst w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" placeholder="${t.phEduInst}" value="${data.institution}" oninput="updateCV()">
+                    <input type="text" class="edu-date w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" placeholder="${t.phEduDate}" value="${data.date}" oninput="updateCV()">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function addEducation() { renderEducationInput(); updateCV(); }
+
+        function renderEducationOutput() {
+            const outContainer = document.getElementById('out-education');
+            outContainer.innerHTML = '';
+            
+            document.querySelectorAll('.edu-item').forEach(item => {
+                const degree = item.querySelector('.edu-degree').value;
+                const inst = item.querySelector('.edu-inst').value;
+                const date = item.querySelector('.edu-date').value;
+
+                if(degree || inst) {
+                    const div = document.createElement('div');
+                    div.className = 'item';
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start mb-1">
+                            <h4 class="font-bold text-gray-800 text-md">${degree}</h4>
+                            <span class="text-sm font-bold text-gray-500" dir="ltr">${date}</span>
+                        </div>
+                        <h5 class="text-sm text-gray-600">${inst}</h5>
+                    `;
+                    outContainer.appendChild(div);
+                }
+            });
+        }
+
+        /* --- Certifications Section --- */
+        function renderCertificationInput(data = { id: generateId(), name: '', issuer: '', month: '', date: '' }) {
+            const t = translations[currentLang];
+            const container = document.getElementById('certification-list');
+            const div = document.createElement('div');
+            // Added cv-entry-item class
+            div.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200 cert-item mb-3 shadow-sm cv-entry-item';
+            div.dataset.id = data.id;
+            
+            div.innerHTML = `
+                ${getControlsHTML()}
+                <input type="text" class="cert-name w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" placeholder="${t.phCertName}" value="${data.name || ''}" oninput="updateCV()">
+                <input type="text" class="cert-issuer w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" placeholder="${t.phCertIssuer}" value="${data.issuer || ''}" oninput="updateCV()">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" class="cert-month w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" placeholder="${t.phCertMonth}" value="${data.month || ''}" oninput="updateCV()">
+                    <input type="text" class="cert-date w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" placeholder="${t.phCertDate}" value="${data.date || ''}" oninput="updateCV()">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function addCertification() { renderCertificationInput(); updateCV(); }
+
+        function renderCertificationOutput() {
+            const outContainer = document.getElementById('out-certifications');
+            const sectionContainer = document.getElementById('certifications-section');
+            outContainer.innerHTML = '';
+            
+            let hasVisibleCerts = false;
+
+            document.querySelectorAll('.cert-item').forEach(item => {
+                const name = item.querySelector('.cert-name').value;
+                const issuer = item.querySelector('.cert-issuer').value;
+                const month = item.querySelector('.cert-month').value.trim();
+                const date = item.querySelector('.cert-date').value.trim();
+                const dateDisplay = [month, date].filter(Boolean).join(' ');
+
+                if(name || issuer) {
+                    hasVisibleCerts = true;
+                    const div = document.createElement('div');
+                    div.className = 'item';
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <h4 class="font-bold text-gray-800 text-sm">${name}</h4>
+                            <span class="text-xs font-bold text-gray-500" dir="ltr">${dateDisplay}</span>
+                        </div>
+                        <h5 class="text-xs text-gray-600">${issuer}</h5>
+                    `;
+                    outContainer.appendChild(div);
+                }
+            });
+
+            sectionContainer.style.display = hasVisibleCerts ? 'block' : 'none';
+        }
+
+        /* --- Languages Section --- */
+        function renderLanguageInput(data = { id: generateId(), name: '', level: '' }) {
+            const t = translations[currentLang];
+            const container = document.getElementById('language-list');
+            const div = document.createElement('div');
+            // Added cv-entry-item class
+            div.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200 lang-item mb-3 shadow-sm cv-entry-item';
+            div.dataset.id = data.id;
+            
+            div.innerHTML = `
+                ${getControlsHTML()}
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" class="lang-name w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" placeholder="${t.phLangName}" value="${data.name}" oninput="updateCV()">
+                    <input type="text" class="lang-level w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" placeholder="${t.phLangLevel}" value="${data.level}" oninput="updateCV()">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function addLanguage() { renderLanguageInput(); updateCV(); }
+
+        function renderLanguageOutput() {
+            const outContainer = document.getElementById('out-languages');
+            outContainer.innerHTML = '';
+            
+            document.querySelectorAll('.lang-item').forEach(item => {
+                const name = item.querySelector('.lang-name').value.trim();
+                const level = item.querySelector('.lang-level').value.trim();
+
+                if(name) {
+                    const div = document.createElement('div');
+                    div.className = "item flex justify-between border-b border-gray-200 pb-1";
+                    div.innerHTML = `
+                        <span class="font-bold text-gray-800 text-sm">${name}</span>
+                        <span class="text-gray-600 text-sm">${level}</span>
+                    `;
+                    outContainer.appendChild(div);
+                }
+            });
+        }
+
+        /* --- Custom Sections --- */
+        function renderCustomInput(data = { id: generateId(), title: '', content: '', pos: 100 }) {
+            const t = translations[currentLang];
+            const container = document.getElementById('custom-section-list');
+            const div = document.createElement('div');
+            // Added cv-entry-item class
+            div.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200 custom-item mb-3 shadow-sm cv-entry-item';
+            div.dataset.id = data.id;
+            
+            div.innerHTML = `
+                ${getControlsHTML()}
+                <input type="text" class="custom-title w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm font-bold" placeholder="${t.phCustomTitle}" value="${data.title}" oninput="updateCV()">
+                <select class="custom-pos w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm bg-white" onchange="updateCV()">
+                    <option value="5" data-i18n="posBeforeSum" ${data.pos === 5 ? 'selected' : ''}>${t.posBeforeSum || 'Before Summary'}</option>
+                    <option value="15" data-i18n="posAfterSum" ${data.pos === 15 ? 'selected' : ''}>${t.posAfterSum || 'After Summary'}</option>
+                    <option value="25" data-i18n="posAfterExp" ${data.pos === 25 ? 'selected' : ''}>${t.posAfterExp || 'After Experience'}</option>
+                    <option value="35" data-i18n="posAfterEdu" ${data.pos === 35 ? 'selected' : ''}>${t.posAfterEdu || 'After Education'}</option>
+                    <option value="45" data-i18n="posAfterCert" ${data.pos === 45 ? 'selected' : ''}>${t.posAfterCert || 'After Certifications'}</option>
+                    <option value="55" data-i18n="posAfterSkills" ${data.pos === 55 ? 'selected' : ''}>${t.posAfterSkills || 'After Skills'}</option>
+                    <option value="65" data-i18n="posAfterLang" ${data.pos === 65 ? 'selected' : ''}>${t.posAfterLang || 'After Languages'}</option>
+                    <option value="100" data-i18n="posEnd" ${data.pos === 100 ? 'selected' : ''}>${t.posEnd || 'At the End'}</option>
+                </select>
+                <textarea class="custom-content w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm h-24" placeholder="${t.phCustomContent}" oninput="updateCV()">${data.content}</textarea>
+            `;
+            container.appendChild(div);
+        }
+
+        function addCustomSection() { renderCustomInput(); updateCV(); }
+
+        /* --- JS Pagination System --- */
+        function paginateCV() {
+            const target = document.getElementById('cv-render-target');
+            target.innerHTML = '';
+            
+            let currentPage = createPage();
+            target.appendChild(currentPage);
+
+            const source = document.getElementById('cv-source');
+            
+            // 1. Clone Header for Page 1 ONLY
+            const header = source.querySelector('.cv-header').cloneNode(true);
+            currentPage.appendChild(header);
+
+            // 2. Setup Container for Sections
+            let currentSectionsContainer = document.createElement('div');
+            currentSectionsContainer.className = 'cv-sections-container flex flex-col gap-6 flex-1';
+            currentPage.appendChild(currentSectionsContainer);
+
+            // 3. Iterate Sections
+            const sourceSections = Array.from(source.querySelector('#cv-sections-container').children);
+
+            for (let section of sourceSections) {
+                if (section.style.display === 'none') continue;
+
+                let currentSection = document.createElement('div');
+                currentSection.className = section.className;
+                currentSectionsContainer.appendChild(currentSection);
+
+                let title = section.querySelector('h3');
+                if (title) {
+                    currentSection.appendChild(title.cloneNode(true));
+                    
+                    // Check if title alone causes overflow
+                    if (currentPage.scrollHeight > currentPage.clientHeight + 2) {
+                        currentSection.remove();
+                        
+                        currentPage = createPage();
+                        target.appendChild(currentPage);
+                        
+                        currentSectionsContainer = document.createElement('div');
+                        currentSectionsContainer.className = 'cv-sections-container flex flex-col gap-6 flex-1';
+                        currentPage.appendChild(currentSectionsContainer);
+                        
+                        currentSection = document.createElement('div');
+                        currentSection.className = section.className;
+                        currentSectionsContainer.appendChild(currentSection);
+                        
+                        currentSection.appendChild(title.cloneNode(true));
+                    }
+                }
+
+                let contentWrapper = section.querySelector('.section-content');
+                if (!contentWrapper) continue;
+                
+                let currentContentWrapper = document.createElement('div');
+                currentContentWrapper.className = contentWrapper.className;
+                currentSection.appendChild(currentContentWrapper);
+
+                // Add Items One by One
+                let items = Array.from(contentWrapper.children);
+                for (let i = 0; i < items.length; i++) {
+                    let item = items[i];
+                    currentContentWrapper.appendChild(item.cloneNode(true));
+
+                    // Check Overflow
+                    if (currentPage.scrollHeight > currentPage.clientHeight + 2) {
+                        currentContentWrapper.lastChild.remove();
+                        
+                        currentPage = createPage();
+                        target.appendChild(currentPage);
+                        
+                        currentSectionsContainer = document.createElement('div');
+                        currentSectionsContainer.className = 'cv-sections-container flex flex-col gap-6 flex-1';
+                        currentPage.appendChild(currentSectionsContainer);
+                        
+                        currentSection = document.createElement('div');
+                        currentSection.className = section.className;
+                        currentSectionsContainer.appendChild(currentSection);
+                        
+                        currentContentWrapper = document.createElement('div');
+                        currentContentWrapper.className = contentWrapper.className;
+                        currentSection.appendChild(currentContentWrapper);
+                        
+                        // Retry append
+                        currentContentWrapper.appendChild(item.cloneNode(true));
+                    }
+                }
+            }
+        }
+
+        function createPage() {
+            const page = document.createElement('div');
+            page.className = 'cv-page flex flex-col bg-white shadow-lg p-10 shrink-0 relative';
+            return page;
+        }
+
+    </script>
+</body>
+</html>

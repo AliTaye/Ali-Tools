@@ -602,7 +602,9 @@
             document.getElementById('out-name').innerText = document.getElementById('inp-name').value || (currentLang === 'en' ? 'Full Name' : 'الاسم الكامل');
             document.getElementById('out-title').innerText = document.getElementById('inp-title').value || (currentLang === 'en' ? 'Job Title' : 'المسمى الوظيفي');
             document.getElementById('out-address').innerText = document.getElementById('inp-address').value || (currentLang === 'en' ? 'Address' : 'العنوان');
-            document.getElementById('out-summary').innerText = document.getElementById('inp-summary').value || '...';
+            
+            // Fix: Convert newlines to <br> for Word compatability and proper DOM rendering
+            document.getElementById('out-summary').innerHTML = document.getElementById('inp-summary').value.replace(/\n/g, '<br>') || '...';
 
             // Contact Info Links
             const emailVal = document.getElementById('inp-email').value;
@@ -672,7 +674,8 @@
 
             document.querySelectorAll('.custom-item').forEach((item, index) => {
                 const title = item.querySelector('.custom-title').value.trim();
-                const content = item.querySelector('.custom-content').value.trim();
+                // Fix: convert newlines to <br>
+                const content = item.querySelector('.custom-content').value.replace(/\n/g, '<br>').trim();
                 const weight = parseInt(item.querySelector('.custom-pos').value);
 
                 if(title || content) {
@@ -682,7 +685,7 @@
                     div.innerHTML = `
                         <h3>${title}</h3>
                         <div class="section-content">
-                            <p class="item text-sm text-gray-700 leading-relaxed text-justify whitespace-pre-line">${content}</p>
+                            <p class="item text-sm text-gray-700 leading-relaxed text-justify">${content}</p>
                         </div>
                     `;
                     allSections.push(div);
@@ -736,8 +739,9 @@
                 source.className = 'flex w-full h-full bg-white';
                 
                 const leftCol = document.createElement('div');
-                // Neutral gray layout for the modern template
-                leftCol.className = 'w-[35%] bg-gray-50 px-6 py-10 flex flex-col gap-8 border-r border-gray-200 print-bg';
+                // Neutral gray layout for the modern template with Overflow Hidden (Fix Infinite Pagination Loop)
+                leftCol.className = 'w-[35%] bg-gray-50 px-6 py-10 flex flex-col gap-8 border-r border-gray-200 print-bg overflow-hidden';
+                leftCol.style.maxHeight = '297mm'; // Prevent left column from overflowing the first page
                 
                 const rightCol = document.createElement('div');
                 rightCol.className = 'w-[65%] px-8 py-10 flex flex-col gap-6';
@@ -934,7 +938,8 @@
                 const title = item.querySelector('.exp-title').value;
                 const company = item.querySelector('.exp-company').value;
                 const date = item.querySelector('.exp-date').value;
-                const desc = item.querySelector('.exp-desc').value;
+                // Fix: convert newlines to <br>
+                const desc = item.querySelector('.exp-desc').value.replace(/\n/g, '<br>');
                 if(title || company) {
                     const div = document.createElement('div');
                     div.className = 'item mb-4';
@@ -944,7 +949,7 @@
                             <span class="font-bold text-gray-800">${company}</span>
                             ${date ? `<span class="text-gray-400">|</span> <span class="text-gray-500" dir="ltr">${date}</span>` : ''}
                         </div>
-                        <p class="text-sm text-gray-700 leading-relaxed text-justify whitespace-pre-line">${desc}</p>
+                        <p class="text-sm text-gray-700 leading-relaxed text-justify">${desc}</p>
                     `;
                     outContainer.appendChild(div);
                 }
@@ -1097,8 +1102,12 @@
             document.getElementById('download-menu').classList.add('hidden');
             const content = document.getElementById('cv-render-target').cloneNode(true);
             
-            // إزالة بعض الكلاسات الخاصة بالعرض لتكون متوافقة أكثر مع الوورد
+            // إزالة الكلاسات المخصصة للظل والأيقونات (SVG) من الوورد لأنها تسبب فوضى
             content.querySelectorAll('.shadow-lg').forEach(el => el.classList.remove('shadow-lg'));
+            content.querySelectorAll('svg').forEach(svg => svg.remove());
+            
+            // إزالة أي عناصر تم إخفاؤها تماماً (مثل الروابط الفارغة)
+            content.querySelectorAll('[style*="display: none"]').forEach(el => el.remove());
             
             const html = `
                 <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40' dir="${currentLang === 'ar' ? 'rtl' : 'ltr'}">
@@ -1106,9 +1115,19 @@
                     <meta charset='utf-8'>
                     <title>${document.getElementById('inp-name').value || 'CV'}</title>
                     <style>
-                        body { font-family: 'Arial', sans-serif; }
-                        h1, h2, h3, h4, h5 { margin-top: 10px; margin-bottom: 5px; }
+                        /* إضافة CSS متوافق مع Word لتحسين مظهر الملف المستخرج */
+                        body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #333; }
+                        h1 { font-size: 24pt; font-weight: bold; color: #111; margin-bottom: 5px; }
+                        h2 { font-size: 14pt; color: #555; margin-bottom: 15px; }
+                        h3 { font-size: 12pt; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 2px; margin-top: 15px; text-transform: uppercase; color: #222; }
+                        h4 { font-size: 11pt; font-weight: bold; margin-top: 10px; margin-bottom: 2px; }
+                        h5 { font-size: 10pt; font-weight: bold; color: #666; margin-top: 0; margin-bottom: 5px; }
+                        p { font-size: 10pt; margin-top: 2px; margin-bottom: 10px; }
                         .item { margin-bottom: 15px; }
+                        ul { margin-top: 5px; margin-bottom: 10px; padding-left: 20px; }
+                        li { font-size: 10pt; margin-bottom: 3px; }
+                        .cv-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+                        .cv-sections-container { width: 100%; }
                         a { text-decoration: none; color: #000; }
                     </style>
                 </head>

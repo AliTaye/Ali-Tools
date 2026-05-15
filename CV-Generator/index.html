@@ -10,19 +10,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Disable double-tap zoom, enforce only two-finger pinch-zoom */
-        html, body {
-            touch-action: manipulation;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-        }
-
-        /* Apply Cairo font when direction is RTL (Arabic) */
-        html[dir="rtl"] body {
-            font-family: 'Cairo', sans-serif;
-        }
+        html, body { touch-action: manipulation; }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        html[dir="rtl"] body { font-family: 'Cairo', sans-serif; }
 
         /* Print specific styles for PDF conversion */
         @media print {
@@ -38,38 +28,22 @@
             .cv-page {
                 width: 210mm !important; height: 297mm !important;
                 box-shadow: none !important; margin: 0 !important;
-                zoom: 1 !important;
-                page-break-after: always; page-break-inside: avoid;
+                zoom: 1 !important; page-break-after: always; page-break-inside: avoid;
             }
-            .cv-page:last-child {
-                page-break-after: auto;
-            }
-            @page {
-                margin: 0cm; /* Remove default page margins */
-                size: A4 portrait;
-            }
-            /* Force background colors to print for the modern layout */
-            .print-bg {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
+            .cv-page:last-child { page-break-after: auto; }
+            @page { margin: 0cm; size: A4 portrait; }
+            .print-bg { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
 
         /* CV Page styling to look like A4 on screen */
         .cv-page {
-            width: 210mm;
-            height: 297mm;
-            overflow: hidden;
-            background: white;
+            width: 210mm; height: 297mm; overflow: hidden; background: white;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
         /* Auto-scale CV to fit entirely on mobile screens */
         @media screen and (max-width: 768px) {
-            .cv-page {
-                /* 794px is approx 210mm. Subtracting 32px for padding ensures a perfect full fit */
-                zoom: calc((100vw - 32px) / 794);
-            }
+            .cv-page { zoom: calc((100vw - 32px) / 794); }
         }
         
         /* Custom Scrollbar */
@@ -80,14 +54,9 @@
 
         /* Unified Sidebar CSS for Desktop & Mobile Toggle */
         .sidebar-container {
-            width: 400px;
-            max-width: 85vw;
-            flex-shrink: 0;
-            background: white;
+            width: 400px; max-width: 85vw; flex-shrink: 0; background: white;
             transition: margin 0.3s ease-in-out, transform 0.3s ease-in-out;
-            z-index: 40;
-            height: 100%;
-            overflow-y: auto;
+            z-index: 40; height: 100%; overflow-y: auto;
         }
 
         /* Desktop Closed State */
@@ -96,16 +65,9 @@
 
         /* Mobile Overrides */
         @media (max-width: 768px) {
-            .sidebar-container {
-                position: fixed;
-                top: 4rem;
-                bottom: 0;
-            }
-            /* Mobile Closed State */
+            .sidebar-container { position: fixed; top: 4rem; bottom: 0; }
             html[dir="ltr"] .sidebar-closed { margin-left: 0; transform: translateX(-100%); }
             html[dir="rtl"] .sidebar-closed { margin-right: 0; transform: translateX(100%); }
-            
-            /* Mobile Open State */
             html[dir="ltr"] .sidebar-container:not(.sidebar-closed) { transform: translateX(0); }
             html[dir="rtl"] .sidebar-container:not(.sidebar-closed) { transform: translateX(0); }
         }
@@ -117,10 +79,9 @@
 </head>
 <body class="bg-gray-200 overflow-hidden">
 
-    <!-- Fixed Top Navbar -->
     <nav class="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 md:px-6 z-50 no-print shadow-sm w-full">
         <div class="flex items-center gap-3">
-            <!-- Toggle Menu Button (Always Visible) -->
+            <!-- Toggle Menu Button -->
             <button onclick="toggleMenu()" class="p-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition shadow flex items-center justify-center gap-1.5 text-sm font-bold">
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 <span class="hidden md:inline" data-i18n="menuBtn">Menu</span>
@@ -135,6 +96,14 @@
             <!-- Language Toggle -->
             <button onclick="toggleLang()" class="text-sm font-bold bg-gray-100 text-gray-700 px-3 py-2 rounded hover:bg-gray-200 transition border border-gray-200" id="lang-btn">عربي</button>
             
+            <!-- Import CV Button -->
+            <label class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-3 md:px-4 rounded shadow transition cursor-pointer">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                <span class="hidden md:inline" data-i18n="importBtn">Import CV</span>
+                <span class="md:hidden" data-i18n="importBtnShort">In</span>
+                <input type="file" id="import-file" accept=".doc,.docx,.html" class="hidden" onchange="importWord(event)">
+            </label>
+
             <!-- Download Options Dropdown -->
             <div class="relative">
                 <button onclick="toggleDownloadMenu()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-3 md:px-4 rounded shadow transition">
@@ -152,11 +121,9 @@
 
     <!-- Main Content Area -->
     <div class="flex pt-16 h-screen w-full relative overflow-hidden">
-        
         <!-- Sidebar Panel -->
         <div id="sidebar" class="sidebar-container sidebar-closed no-print shadow-2xl md:shadow-none relative">
             <div class="p-6 pb-20">
-                
                 <!-- Document Settings (Type & Template) -->
                 <div class="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100 shadow-sm">
                     <h3 class="font-bold text-blue-800 mb-3" data-i18n="docSettings">Document Settings</h3>
@@ -184,62 +151,56 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-bold text-gray-600 mb-1" data-i18n="fullName">Full Name</label>
-                            <input type="text" id="inp-name" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phName" placeholder="John Doe" value="Rhoda Jackson" oninput="updateCV()">
+                            <input type="text" id="inp-name" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" data-i18n-placeholder="phName" placeholder="John Doe" value="Rhoda Jackson" oninput="updateCV()">
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-600 mb-1" data-i18n="jobTitle">Job Title</label>
-                            <input type="text" id="inp-title" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phJob" placeholder="Software Engineer" value="Graphic Designer" oninput="updateCV()">
+                            <input type="text" id="inp-title" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" data-i18n-placeholder="phJob" placeholder="Software Engineer" value="Graphic Designer" oninput="updateCV()">
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-bold text-gray-600 mb-1" data-i18n="email">Email</label>
-                                <input type="email" id="inp-email" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phEmail" placeholder="email@example.com" value="rhoda@email.com" oninput="updateCV()">
+                                <input type="email" id="inp-email" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" data-i18n-placeholder="phEmail" placeholder="email@example.com" value="rhoda@email.com" oninput="updateCV()">
                             </div>
                             <div>
                                 <label class="block text-sm font-bold text-gray-600 mb-1" data-i18n="phone">Phone</label>
-                                <input type="text" id="inp-phone" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phPhone" placeholder="+1 234 567 890" value="(123) 456-7890" oninput="updateCV()">
+                                <input type="text" id="inp-phone" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" data-i18n-placeholder="phPhone" placeholder="+1 234 567 890" value="(123) 456-7890" oninput="updateCV()">
                             </div>
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-600 mb-1" data-i18n="address">Address</label>
-                            <input type="text" id="inp-address" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phAddress" placeholder="New York, USA" value="Denver, CO" oninput="updateCV()">
+                            <input type="text" id="inp-address" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" data-i18n-placeholder="phAddress" placeholder="New York, USA" value="Denver, CO" oninput="updateCV()">
                         </div>
                         
-                        <!-- Social Links & Portfolio Section -->
+                        <!-- Social Links -->
                         <div class="border-t border-gray-100 pt-4 mt-2">
                             <h3 class="text-sm font-bold text-gray-800 mb-3" data-i18n="socialLinks">Social Links (URL & Display Text)</h3>
-                            
-                            <!-- LinkedIn -->
                             <div class="mb-3">
                                 <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="linkedin">LinkedIn</label>
                                 <div class="grid grid-cols-2 gap-2">
-                                    <input type="url" id="inp-linkedin-url" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phLinkUrl" placeholder="Link URL" value="https://linkedin.com/in/rhodajackson" oninput="updateCV()">
-                                    <input type="text" id="inp-linkedin-text" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phLinkText" placeholder="Display Text" value="LinkedIn" oninput="updateCV()">
+                                    <input type="url" id="inp-linkedin-url" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500" data-i18n-placeholder="phLinkUrl" placeholder="Link URL" value="https://linkedin.com/in/rhodajackson" oninput="updateCV()">
+                                    <input type="text" id="inp-linkedin-text" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500" data-i18n-placeholder="phLinkText" placeholder="Display Text" value="LinkedIn" oninput="updateCV()">
                                 </div>
                             </div>
-                            
-                            <!-- GitHub -->
                             <div class="mb-3">
                                 <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="github">GitHub</label>
                                 <div class="grid grid-cols-2 gap-2">
-                                    <input type="url" id="inp-github-url" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phLinkUrl" placeholder="Link URL" value="" oninput="updateCV()">
-                                    <input type="text" id="inp-github-text" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phLinkText" placeholder="Display Text" value="" oninput="updateCV()">
+                                    <input type="url" id="inp-github-url" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500" data-i18n-placeholder="phLinkUrl" placeholder="Link URL" value="" oninput="updateCV()">
+                                    <input type="text" id="inp-github-text" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500" data-i18n-placeholder="phLinkText" placeholder="Display Text" value="" oninput="updateCV()">
                                 </div>
                             </div>
-
-                            <!-- Portfolio -->
                             <div class="mb-3">
                                 <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="portfolio">Portfolio</label>
                                 <div class="grid grid-cols-2 gap-2">
-                                    <input type="url" id="inp-portfolio-url" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phLinkUrl" placeholder="Link URL" value="" oninput="updateCV()">
-                                    <input type="text" id="inp-portfolio-text" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-i18n-placeholder="phLinkText" placeholder="Display Text" value="" oninput="updateCV()">
+                                    <input type="url" id="inp-portfolio-url" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500" data-i18n-placeholder="phLinkUrl" placeholder="Link URL" value="" oninput="updateCV()">
+                                    <input type="text" id="inp-portfolio-text" class="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500" data-i18n-placeholder="phLinkText" placeholder="Display Text" value="" oninput="updateCV()">
                                 </div>
                             </div>
                         </div>
 
                         <div>
                             <label class="block text-sm font-bold text-gray-600 mb-1" data-i18n="summary">Professional Summary</label>
-                            <textarea id="inp-summary" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 h-24" data-i18n-placeholder="phSummary" placeholder="Write about yourself..." oninput="updateCV()">Creative Graphic Designer with years of experience driving marketing efforts through innovative visual design. Strong ability to manage multiple projects simultaneously and deliver high-quality assets.</textarea>
+                            <textarea id="inp-summary" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 h-24" data-i18n-placeholder="phSummary" placeholder="Write about yourself..." oninput="updateCV()">Creative Graphic Designer with years of experience driving marketing efforts through innovative visual design. Strong ability to manage multiple projects simultaneously and deliver high-quality assets.</textarea>
                         </div>
                     </div>
                 </div>
@@ -277,11 +238,11 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-bold text-gray-600 mb-1" data-i18n="hardSkills">Hard Skills (Comma separated)</label>
-                            <textarea id="inp-hard-skills" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 h-20" data-i18n-placeholder="phHard" placeholder="HTML, CSS, JavaScript..." oninput="updateCV()">Adobe Photoshop, Adobe Illustrator, Adobe After Effects, Adobe InDesign, HTML/CSS</textarea>
+                            <textarea id="inp-hard-skills" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 h-20" data-i18n-placeholder="phHard" placeholder="HTML, CSS, JavaScript..." oninput="updateCV()">Adobe Photoshop, Adobe Illustrator, Adobe After Effects, Adobe InDesign, HTML/CSS</textarea>
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-600 mb-1" data-i18n="softSkills">Soft Skills (Comma separated)</label>
-                            <textarea id="inp-soft-skills" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 h-20" data-i18n-placeholder="phSoft" placeholder="Problem Solving, Teamwork..." oninput="updateCV()"></textarea>
+                            <textarea id="inp-soft-skills" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 h-20" data-i18n-placeholder="phSoft" placeholder="Problem Solving, Teamwork..." oninput="updateCV()"></textarea>
                         </div>
                     </div>
                 </div>
@@ -303,7 +264,6 @@
                     </div>
                     <div id="custom-section-list" class="space-y-4"></div>
                 </div>
-
             </div>
         </div>
 
@@ -312,8 +272,7 @@
 
         <!-- Live Preview Section -->
         <div id="preview-panel" class="flex-1 h-full overflow-y-auto p-4 md:p-8 print-area relative bg-gray-200 transition-all duration-300">
-            
-            <!-- Warning Banner for Resume exceeding 1 page -->
+            <!-- Warning Banner -->
             <div id="resume-warning" class="hidden sticky top-0 z-10 bg-red-100 border-l-4 border-red-500 text-red-700 p-3 mb-4 shadow text-sm flex items-center justify-between no-print transition">
                 <div class="flex items-center gap-2">
                     <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
@@ -322,136 +281,66 @@
                 <button onclick="this.parentElement.classList.add('hidden')" class="text-red-700 hover:text-red-900 font-bold px-2">&times;</button>
             </div>
 
-            <!-- Data Pool (Hidden, stores raw HTML blocks to be assembled) -->
+            <!-- Data Pool -->
             <div id="data-pool" class="hidden">
-                
-                <!-- Header Info -->
                 <div id="pool-header">
                     <h1 id="out-name">John Doe</h1>
                     <h2 id="out-title-container"><span id="out-title">Software Engineer</span></h2>
                 </div>
-
-                <!-- Contact Info -->
                 <div id="pool-contact">
-                    <a id="out-email-link" href="#" class="flex items-center gap-2 hover:text-blue-600 transition cursor-pointer">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                        <span id="out-email" class="break-all">email@example.com</span>
-                    </a>
-                    <a id="out-phone-link" href="#" class="flex items-center gap-2 hover:text-blue-600 transition cursor-pointer">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                        <span id="out-phone" dir="ltr">+1 234 567 890</span>
-                    </a>
-                    <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        <span id="out-address">New York, USA</span>
-                    </div>
-                    <a id="out-linkedin-link" href="#" target="_blank" class="flex items-center gap-2 hover:text-blue-600 transition cursor-pointer">
-                        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                        <span id="out-linkedin-text" dir="ltr" class="break-all">John Doe</span>
-                    </a>
-                    <a id="out-github-link" href="#" target="_blank" class="flex items-center gap-2 hover:text-blue-600 transition cursor-pointer">
-                        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                        <span id="out-github-text" dir="ltr" class="break-all">github.com</span>
-                    </a>
-                    <a id="out-portfolio-link" href="#" target="_blank" class="flex items-center gap-2 hover:text-blue-600 transition cursor-pointer">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
-                        <span id="out-portfolio-text" dir="ltr" class="break-all">portfolio.com</span>
-                    </a>
+                    <a id="out-email-link" href="#" class="flex items-center gap-2 hover:text-blue-600 transition cursor-pointer"><svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg><span id="out-email" class="break-all">email@example.com</span></a>
+                    <a id="out-phone-link" href="#" class="flex items-center gap-2 hover:text-blue-600 transition cursor-pointer"><svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg><span id="out-phone" dir="ltr">+1 234 567 890</span></a>
+                    <div class="flex items-center gap-2"><svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span id="out-address">New York, USA</span></div>
+                    <a id="out-linkedin-link" href="#" target="_blank" class="flex items-center gap-2 hover:text-blue-600 transition cursor-pointer"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg><span id="out-linkedin-text" dir="ltr" class="break-all">John Doe</span></a>
+                    <a id="out-github-link" href="#" target="_blank" class="flex items-center gap-2 hover:text-blue-600 transition cursor-pointer"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg><span id="out-github-text" dir="ltr" class="break-all">github.com</span></a>
+                    <a id="out-portfolio-link" href="#" target="_blank" class="flex items-center gap-2 hover:text-blue-600 transition cursor-pointer"><svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg><span id="out-portfolio-text" dir="ltr" class="break-all">portfolio.com</span></a>
                 </div>
 
-                <!-- Sections Container Pool -->
                 <div id="pool-sections" class="cv-sections-container">
-                    
-                    <!-- Summary -->
-                    <div id="section-summary" class="cv-section" data-weight="10">
-                        <h3 data-i18n="summary">Professional Summary</h3>
-                        <div class="section-content">
-                            <p id="out-summary" class="item text-gray-700 leading-relaxed text-justify">
-                                <!-- Summary text -->
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Experience -->
-                    <div id="section-experience" class="cv-section" data-weight="20">
-                        <h3 data-i18n="workExp">Experience</h3>
-                        <div id="out-experience" class="section-content space-y-4"></div>
-                    </div>
-
-                    <!-- Education -->
-                    <div id="section-education" class="cv-section" data-weight="30">
-                        <h3 data-i18n="education">Education</h3>
-                        <div id="out-education" class="section-content space-y-4"></div>
-                    </div>
-
-                    <!-- Certifications -->
-                    <div id="certifications-section" class="cv-section" data-weight="40">
-                        <h3 data-i18n="certifications">Certifications</h3>
-                        <div id="out-certifications" class="section-content space-y-3"></div>
-                    </div>
-
-                    <!-- Skills -->
+                    <div id="section-summary" class="cv-section" data-weight="10"><h3 data-i18n="summary">Professional Summary</h3><div class="section-content"><p id="out-summary" class="item text-gray-700 leading-relaxed text-justify"></p></div></div>
+                    <div id="section-experience" class="cv-section" data-weight="20"><h3 data-i18n="workExp">Experience</h3><div id="out-experience" class="section-content space-y-4"></div></div>
+                    <div id="section-education" class="cv-section" data-weight="30"><h3 data-i18n="education">Education</h3><div id="out-education" class="section-content space-y-4"></div></div>
+                    <div id="certifications-section" class="cv-section" data-weight="40"><h3 data-i18n="certifications">Certifications</h3><div id="out-certifications" class="section-content space-y-3"></div></div>
                     <div id="section-skills" class="cv-section" data-weight="50">
                         <h3 data-i18n="skills">Skills</h3>
                         <div id="skills-content-wrapper" class="section-content mt-3">
-                            <!-- Hard Skills -->
-                            <div id="hard-skills-section" class="item">
-                                <h4 class="font-bold text-gray-800 mb-2" data-i18n="hardSkillsHeader">Hard Skills</h4>
-                                <ul id="out-hard-skills" class="list-disc list-inside text-gray-700 space-y-1 text-sm"></ul>
-                            </div>
-                            <!-- Soft Skills -->
-                            <div id="soft-skills-section" class="item">
-                                <h4 class="font-bold text-gray-800 mb-2 mt-3" data-i18n="softSkillsHeader">Soft Skills</h4>
-                                <ul id="out-soft-skills" class="list-disc list-inside text-gray-700 space-y-1 text-sm"></ul>
-                            </div>
+                            <div id="hard-skills-section" class="item"><h4 class="font-bold text-gray-800 mb-2" data-i18n="hardSkillsHeader">Hard Skills</h4><ul id="out-hard-skills" class="list-disc list-inside text-gray-700 space-y-1 text-sm"></ul></div>
+                            <div id="soft-skills-section" class="item"><h4 class="font-bold text-gray-800 mb-2 mt-3" data-i18n="softSkillsHeader">Soft Skills</h4><ul id="out-soft-skills" class="list-disc list-inside text-gray-700 space-y-1 text-sm"></ul></div>
                         </div>
                     </div>
-
-                    <!-- Languages -->
-                    <div id="section-languages" class="cv-section" data-weight="60">
-                        <h3 data-i18n="languages">Languages</h3>
-                        <div id="out-languages" class="section-content"></div>
-                    </div>
-
+                    <div id="section-languages" class="cv-section" data-weight="60"><h3 data-i18n="languages">Languages</h3><div id="out-languages" class="section-content"></div></div>
                 </div>
-
-            </div>
-            
-            <!-- Render Target for Paginated Pages -->
-            <div id="cv-render-target" class="flex flex-col gap-8 pb-8 items-center w-full">
-                <!-- JS will generate .cv-page elements here -->
             </div>
 
+            <!-- Render Target -->
+            <div id="cv-render-target" class="flex flex-col gap-8 pb-8 items-center w-full"></div>
         </div>
-
     </div>
 
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 no-print rtl:right-auto rtl:left-4"></div>
+
     <script>
-        // Dictionary for i18n
         const translations = {
             en: {
                 cvMaker: "CV Maker", printBtn: "Print / Save PDF", printBtnShort: "PDF", langBtn: "عربي", menuBtn: "Menu",
                 downloadBtn: "Download", downloadBtnShort: "DL", downloadPdf: "Save as PDF", downloadWord: "Save as Word (.doc)",
+                importBtn: "Import CV", importBtnShort: "In", importSuccess: "CV Loaded Successfully!", importError: "Invalid file. Please select a Word (.doc) file generated by this application.",
                 docSettings: "Document Settings", docType: "Type", template: "Template",
                 cvType: "CV (Multi-page)", resumeType: "Resume (1 Page)",
                 classic: "Classic", modern: "Modern (2 Columns)",
                 pageWarning: "Warning: A Resume should typically be 1 page long. Consider shortening your content or switching the Type to CV.",
-                contactInfo: "Contact",
-                personalInfo: "Personal Information",
-                fullName: "Full Name", phName: "John Doe",
-                jobTitle: "Job Title", phJob: "Software Engineer",
-                email: "Email", phEmail: "email@example.com",
-                phone: "Phone", phPhone: "+1 234 567 890",
+                contactInfo: "Contact", personalInfo: "Personal Information",
+                fullName: "Full Name", phName: "John Doe", jobTitle: "Job Title", phJob: "Software Engineer",
+                email: "Email", phEmail: "email@example.com", phone: "Phone", phPhone: "+1 234 567 890",
                 address: "Address", phAddress: "New York, USA",
-                socialLinks: "Social Links (URL & Display Text)",
-                linkedin: "LinkedIn", github: "GitHub", portfolio: "Portfolio",
+                socialLinks: "Social Links (URL & Display Text)", linkedin: "LinkedIn", github: "GitHub", portfolio: "Portfolio",
                 phLinkUrl: "Link URL", phLinkText: "Display Text (e.g. John Doe)",
                 summary: "Professional Summary", phSummary: "Write about yourself...",
                 workExp: "Experience", addExp: "+ Add Experience",
                 education: "Education", addEdu: "+ Add Education",
                 certifications: "Certifications", addCert: "+ Add Certification",
-                skills: "Skills",
-                hardSkills: "Hard Skills (Comma separated)", phHard: "HTML, CSS, JavaScript...", hardSkillsHeader: "Hard Skills",
+                skills: "Skills", hardSkills: "Hard Skills (Comma separated)", phHard: "HTML, CSS, JavaScript...", hardSkillsHeader: "Hard Skills",
                 softSkills: "Soft Skills (Comma separated)", phSoft: "Problem Solving, Teamwork...", softSkillsHeader: "Soft Skills",
                 phExpTitle: "Job Title", phExpCompany: "Company", phExpDate: "Date (e.g. 2020 - Present)", phExpDesc: "Job description and achievements...",
                 phEduDegree: "Degree / Field of Study", phEduInst: "Institution", phEduDate: "Graduation Year",
@@ -463,26 +352,22 @@
             ar: {
                 cvMaker: "صانع السيرة", printBtn: "طباعة / PDF", printBtnShort: "PDF", langBtn: "English", menuBtn: "القائمة",
                 downloadBtn: "تنزيل", downloadBtnShort: "تنزيل", downloadPdf: "حفظ كـ PDF", downloadWord: "حفظ كـ Word (.doc)",
+                importBtn: "استيراد ملف", importBtnShort: "رفع", importSuccess: "تم استيراد السيرة بنجاح!", importError: "ملف غير صالح. يرجى اختيار ملف وورد (.doc) تم إنشاؤه مسبقاً بواسطة هذا التطبيق.",
                 docSettings: "إعدادات المستند", docType: "النوع", template: "القالب",
                 cvType: "سيرة ذاتية - CV (متعدد الصفحات)", resumeType: "ريزمي - Resume (صفحة واحدة)",
                 classic: "كلاسيكي", modern: "حديث (عمودين)",
                 pageWarning: "تحذير: الريزمي (Resume) يجب ألا يتجاوز صفحة واحدة. يُنصح باختصار المحتوى أو التبديل إلى نوع السيرة الذاتية (CV).",
-                contactInfo: "معلومات التواصل",
-                personalInfo: "المعلومات الشخصية",
-                fullName: "الاسم الكامل", phName: "أحمد محمد",
-                jobTitle: "المسمى الوظيفي", phJob: "مهندس برمجيات",
-                email: "البريد الإلكتروني", phEmail: "email@example.com",
-                phone: "رقم الهاتف", phPhone: "0500000000",
+                contactInfo: "معلومات التواصل", personalInfo: "المعلومات الشخصية",
+                fullName: "الاسم الكامل", phName: "أحمد محمد", jobTitle: "المسمى الوظيفي", phJob: "مهندس برمجيات",
+                email: "البريد الإلكتروني", phEmail: "email@example.com", phone: "رقم الهاتف", phPhone: "0500000000",
                 address: "العنوان", phAddress: "الرياض، السعودية",
-                socialLinks: "الروابط والمواقع (الرابط والنص المعروض)",
-                linkedin: "لينكد إن", github: "جيت هاب", portfolio: "رابط الموقع",
+                socialLinks: "الروابط والمواقع (الرابط والنص المعروض)", linkedin: "لينكد إن", github: "جيت هاب", portfolio: "رابط الموقع",
                 phLinkUrl: "رابط الموقع", phLinkText: "النص المعروض (مثال: علي طيب)",
                 summary: "الملخص المهني", phSummary: "اكتب نبذة عنك...",
                 workExp: "الخبرات", addExp: "+ إضافة خبرة",
                 education: "التعليم", addEdu: "+ إضافة تعليم",
                 certifications: "الشهادات", addCert: "+ إضافة شهادة",
-                skills: "المهارات",
-                hardSkills: "المهارات التقنية (مفصول بفاصلة)", phHard: "برمجة، تصميم، جافاسكربت...", hardSkillsHeader: "المهارات التقنية",
+                skills: "المهارات", hardSkills: "المهارات التقنية (مفصول بفاصلة)", phHard: "برمجة، تصميم، جافاسكربت...", hardSkillsHeader: "المهارات التقنية",
                 softSkills: "المهارات الشخصية (مفصول بفاصلة)", phSoft: "حل المشكلات، العمل الجماعي...", softSkillsHeader: "المهارات الشخصية",
                 phExpTitle: "المسمى الوظيفي", phExpCompany: "الشركة", phExpDate: "التاريخ (مثال: 2020 - الحاضر)", phExpDesc: "وصف المهام والإنجازات...",
                 phEduDegree: "الدرجة العلمية / التخصص", phEduInst: "المؤسسة التعليمية", phEduDate: "سنة التخرج",
@@ -494,7 +379,7 @@
         };
 
         let currentLang = 'en';
-        let menuOpen = window.innerWidth >= 768; // Open by default on desktop
+        let menuOpen = window.innerWidth >= 768;
 
         function toggleMenu() {
             menuOpen = !menuOpen;
@@ -504,12 +389,14 @@
         function updateMenuUI() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
+            if (!sidebar) return; // Prevent null error
+            
             if (menuOpen) {
                 sidebar.classList.remove('sidebar-closed');
-                overlay.classList.remove('hidden');
+                if(overlay) overlay.classList.remove('hidden');
             } else {
                 sidebar.classList.add('sidebar-closed');
-                overlay.classList.add('hidden');
+                if(overlay) overlay.classList.add('hidden');
             }
         }
 
@@ -551,7 +438,8 @@
                 if (t[key]) opt.innerText = t[key];
             });
 
-            document.getElementById('lang-btn').innerText = t.langBtn;
+            const langBtn = document.getElementById('lang-btn');
+            if(langBtn) langBtn.innerText = t.langBtn;
             updateCV();
         }
 
@@ -571,7 +459,7 @@
         }
 
         const getControlsHTML = () => `
-            <div class="flex justify-end gap-1.5 mb-2">
+            <div class="flex justify-end gap-1.5 mb-2 no-print">
                 <button onclick="moveItemUp(this)" class="text-gray-500 hover:text-blue-600 bg-gray-200 hover:bg-blue-100 rounded w-7 h-7 flex items-center justify-center transition shadow-sm" title="Move Up"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg></button>
                 <button onclick="moveItemDown(this)" class="text-gray-500 hover:text-blue-600 bg-gray-200 hover:bg-blue-100 rounded w-7 h-7 flex items-center justify-center transition shadow-sm" title="Move Down"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></button>
                 <button onclick="this.closest('.cv-entry-item').remove(); updateCV();" class="text-red-500 hover:text-red-700 bg-red-100 hover:bg-red-200 rounded w-7 h-7 flex items-center justify-center font-bold transition text-lg shadow-sm" title="Delete">&times;</button>
@@ -587,7 +475,6 @@
             { id: generateId(), degree: 'B.F.A. Visual Arts', institution: 'University of Chicago', date: '2016 - 2020' }
         ];
 
-        // Init
         window.onload = () => {
             updateMenuUI();
             initialExperience.forEach(exp => renderExperienceInput(exp));
@@ -596,17 +483,12 @@
             applyTranslations();
         };
 
-        /* --- 1. Populate Data Pool --- */
         function updateCV() {
-            // Update Base Text
             document.getElementById('out-name').innerText = document.getElementById('inp-name').value || (currentLang === 'en' ? 'Full Name' : 'الاسم الكامل');
             document.getElementById('out-title').innerText = document.getElementById('inp-title').value || (currentLang === 'en' ? 'Job Title' : 'المسمى الوظيفي');
             document.getElementById('out-address').innerText = document.getElementById('inp-address').value || (currentLang === 'en' ? 'Address' : 'العنوان');
-            
-            // Fix: Convert newlines to <br> for Word compatability and proper DOM rendering
             document.getElementById('out-summary').innerHTML = document.getElementById('inp-summary').value.replace(/\n/g, '<br>') || '...';
 
-            // Contact Info Links
             const emailVal = document.getElementById('inp-email').value;
             const phoneVal = document.getElementById('inp-phone').value;
             document.getElementById('out-email').innerText = emailVal || 'Email';
@@ -633,7 +515,6 @@
             updateSocialLink('out-github-link', 'out-github-text', 'inp-github-url', 'inp-github-text');
             updateSocialLink('out-portfolio-link', 'out-portfolio-text', 'inp-portfolio-url', 'inp-portfolio-text');
 
-            // Skills
             const formatSkills = (text) => text.trim() ? text.split(',').map(s => s.trim()).filter(s => s).map(skill => `<li>${skill}</li>`).join('') : '';
             const hardSkillsText = document.getElementById('inp-hard-skills').value;
             const softSkillsText = document.getElementById('inp-soft-skills').value;
@@ -642,25 +523,18 @@
             document.getElementById('hard-skills-section').style.display = hardSkillsText.trim() ? 'block' : 'none';
             document.getElementById('soft-skills-section').style.display = softSkillsText.trim() ? 'block' : 'none';
 
-            // Lists
             renderExperienceOutput();
             renderEducationOutput();
             renderCertificationOutput();
             renderLanguageOutput();
-            
             sortAndRenderAllSectionsInPool();
-
-            // 2. Assemble the requested Layout from Pool
             const assembledSource = assembleLayoutFromPool();
-
-            // 3. Paginate layout into A4 pages
             paginateCV(assembledSource);
         }
 
         function sortAndRenderAllSectionsInPool() {
             const container = document.getElementById('pool-sections');
             
-            // Visibility toggles
             document.getElementById('section-summary').style.display = document.getElementById('inp-summary').value.trim() ? 'block' : 'none';
             document.getElementById('section-experience').style.display = document.getElementById('out-experience').innerHTML.trim() ? 'block' : 'none';
             document.getElementById('section-education').style.display = document.getElementById('out-education').innerHTML.trim() ? 'block' : 'none';
@@ -668,13 +542,11 @@
             document.getElementById('section-skills').style.display = (document.getElementById('inp-hard-skills').value.trim() || document.getElementById('inp-soft-skills').value.trim()) ? 'block' : 'none';
             document.getElementById('section-languages').style.display = document.getElementById('out-languages').innerHTML.trim() ? 'block' : 'none';
 
-            // Rebuild Custom Sections in Pool
             container.querySelectorAll('.custom-section-out').forEach(el => el.remove());
             const allSections = Array.from(container.children);
 
             document.querySelectorAll('.custom-item').forEach((item, index) => {
                 const title = item.querySelector('.custom-title').value.trim();
-                // Fix: convert newlines to <br>
                 const content = item.querySelector('.custom-content').value.replace(/\n/g, '<br>').trim();
                 const weight = parseInt(item.querySelector('.custom-pos').value);
 
@@ -682,12 +554,7 @@
                     const div = document.createElement('div');
                     div.className = 'cv-section custom-section-out';
                     div.dataset.weight = weight + (index * 0.01);
-                    div.innerHTML = `
-                        <h3>${title}</h3>
-                        <div class="section-content">
-                            <p class="item text-sm text-gray-700 leading-relaxed text-justify">${content}</p>
-                        </div>
-                    `;
+                    div.innerHTML = `<h3>${title}</h3><div class="section-content"><p class="item text-sm text-gray-700 leading-relaxed text-justify">${content}</p></div>`;
                     allSections.push(div);
                 }
             });
@@ -696,28 +563,21 @@
             allSections.forEach(sec => { if(sec) container.appendChild(sec); });
         }
 
-        /* --- 2. Assembler --- */
         function assembleLayoutFromPool() {
             const template = document.getElementById('inp-template').value;
             const source = document.createElement('div');
             
-            // Clone pieces from pool
             const poolHeader = document.getElementById('pool-header').cloneNode(true);
             const poolContact = document.getElementById('pool-contact').cloneNode(true);
-            const poolSections = Array.from(document.getElementById('pool-sections').children)
-                                      .filter(s => s.style.display !== 'none')
-                                      .map(s => s.cloneNode(true));
+            const poolSections = Array.from(document.getElementById('pool-sections').children).filter(s => s.style.display !== 'none').map(s => s.cloneNode(true));
 
             if (template === 'classic') {
                 source.className = 'w-full';
-                
                 const headContainer = document.createElement('div');
                 headContainer.className = 'cv-header border-b-2 border-gray-800 pb-6 mb-6';
                 poolHeader.querySelector('#out-name').className = 'text-4xl font-bold text-gray-900 mb-2';
                 poolHeader.querySelector('#out-title').className = 'text-xl font-bold text-gray-500 mb-4 inline-block';
-                
                 poolContact.className = 'flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600';
-                
                 headContainer.appendChild(poolHeader);
                 headContainer.appendChild(poolContact);
                 source.appendChild(headContainer);
@@ -730,18 +590,15 @@
                     const skillsContent = s.querySelector('#skills-content-wrapper');
                     if (skillsContent) skillsContent.className = 'section-content grid grid-cols-2 gap-6 mt-3';
                     if (s.id === 'section-languages') s.querySelector('.section-content').className = 'section-content grid grid-cols-2 gap-x-6 gap-y-2';
-
                     secContainer.appendChild(s);
                 });
                 source.appendChild(secContainer);
 
             } else if (template === 'modern') {
                 source.className = 'flex w-full h-full bg-white';
-                
                 const leftCol = document.createElement('div');
-                // Neutral gray layout for the modern template with Overflow Hidden (Fix Infinite Pagination Loop)
                 leftCol.className = 'w-[35%] bg-gray-50 px-6 py-10 flex flex-col gap-8 border-r border-gray-200 print-bg overflow-hidden';
-                leftCol.style.maxHeight = '297mm'; // Prevent left column from overflowing the first page
+                leftCol.style.maxHeight = '297mm';
                 
                 const rightCol = document.createElement('div');
                 rightCol.className = 'w-[65%] px-8 py-10 flex flex-col gap-6';
@@ -765,22 +622,14 @@
                 poolSections.forEach(s => {
                     const id = s.id;
                     const h3 = s.querySelector('h3');
-                    
                     if (id === 'section-education' || id === 'section-skills' || id === 'section-languages') {
-                        if (h3) {
-                            // Plain neutral headers for left side
-                            h3.className = 'text-sm font-black text-gray-900 mb-3 uppercase tracking-widest border-b border-gray-300 pb-1';
-                        }
+                        if (h3) h3.className = 'text-sm font-black text-gray-900 mb-3 uppercase tracking-widest border-b border-gray-300 pb-1';
                         const skillsContent = s.querySelector('#skills-content-wrapper');
                         if (skillsContent) skillsContent.className = 'section-content flex flex-col gap-4 mt-2';
                         if (id === 'section-languages') s.querySelector('.section-content').className = 'section-content flex flex-col gap-2';
-
                         secContainerLeft.appendChild(s);
                     } else {
-                        if (h3) {
-                            // Plain neutral headers for right side
-                            h3.className = 'text-xl font-black text-gray-900 border-b-2 border-gray-200 pb-1 mb-4 uppercase tracking-wider';
-                        }
+                        if (h3) h3.className = 'text-xl font-black text-gray-900 border-b-2 border-gray-200 pb-1 mb-4 uppercase tracking-wider';
                         secContainerRight.appendChild(s);
                     }
                 });
@@ -790,11 +639,9 @@
                 source.appendChild(leftCol);
                 source.appendChild(rightCol);
             }
-            
             return source;
         }
 
-        /* --- 3. Paginate --- */
         function paginateCV(source) {
             const target = document.getElementById('cv-render-target');
             target.innerHTML = '';
@@ -811,7 +658,6 @@
                 currentSectionsContainer = document.createElement('div');
                 currentSectionsContainer.className = 'cv-sections-container flex flex-col gap-6 flex-1';
                 currentPage.appendChild(currentSectionsContainer);
-                
             } else if (template === 'modern') {
                 const modernLayout = source.cloneNode(true);
                 modernLayout.querySelector('.cv-sections-container').innerHTML = '';
@@ -878,7 +724,6 @@
                 }
             }
             
-            // Warning Banner Check
             const docType = document.getElementById('inp-doc-type').value;
             const warningEl = document.getElementById('resume-warning');
             if (docType === 'resume' && pageCount > 1) {
@@ -904,7 +749,6 @@
             } else {
                 const modernLayout = source.cloneNode(true);
                 modernLayout.querySelector('.cv-sections-container').innerHTML = '';
-                // Clear left column content on page 2+ for a clean flow
                 const leftCol = modernLayout.querySelector('.w-\\[35\\%\\]');
                 if(leftCol) leftCol.innerHTML = ''; 
                 page.appendChild(modernLayout);
@@ -912,21 +756,12 @@
             return page;
         }
 
-        /* --- Section Renderers (Outputs to Pool) --- */
         function renderExperienceInput(data = { id: generateId(), title: '', company: '', date: '', desc: '' }) {
             const t = translations[currentLang];
             const div = document.createElement('div');
             div.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200 exp-item mb-3 shadow-sm cv-entry-item';
             div.dataset.id = data.id;
-            div.innerHTML = `
-                ${getControlsHTML()}
-                <input type="text" class="exp-title w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm font-bold text-gray-800" placeholder="${t.phExpTitle}" value="${data.title}" oninput="updateCV()">
-                <div class="grid grid-cols-2 gap-2 mb-2">
-                    <input type="text" class="exp-company w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm text-gray-600 font-bold" placeholder="${t.phExpCompany}" value="${data.company}" oninput="updateCV()">
-                    <input type="text" class="exp-date w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="${t.phExpDate}" value="${data.date}" oninput="updateCV()">
-                </div>
-                <textarea class="exp-desc w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm h-20" placeholder="${t.phExpDesc}" oninput="updateCV()">${data.desc}</textarea>
-            `;
+            div.innerHTML = `${getControlsHTML()}<input type="text" class="exp-title w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm font-bold text-gray-800" placeholder="${t.phExpTitle}" value="${data.title}" oninput="updateCV()"><div class="grid grid-cols-2 gap-2 mb-2"><input type="text" class="exp-company w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm text-gray-600 font-bold" placeholder="${t.phExpCompany}" value="${data.company}" oninput="updateCV()"><input type="text" class="exp-date w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="${t.phExpDate}" value="${data.date}" oninput="updateCV()"></div><textarea class="exp-desc w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm h-20" placeholder="${t.phExpDesc}" oninput="updateCV()">${data.desc}</textarea>`;
             document.getElementById('experience-list').appendChild(div);
         }
         function addExperience() { renderExperienceInput(); updateCV(); }
@@ -938,19 +773,11 @@
                 const title = item.querySelector('.exp-title').value;
                 const company = item.querySelector('.exp-company').value;
                 const date = item.querySelector('.exp-date').value;
-                // Fix: convert newlines to <br>
                 const desc = item.querySelector('.exp-desc').value.replace(/\n/g, '<br>');
                 if(title || company) {
                     const div = document.createElement('div');
                     div.className = 'item mb-4';
-                    div.innerHTML = `
-                        <h4 class="font-bold text-gray-900 text-lg leading-tight">${title}</h4>
-                        <div class="flex items-center gap-2 mb-2 text-sm">
-                            <span class="font-bold text-gray-800">${company}</span>
-                            ${date ? `<span class="text-gray-400">|</span> <span class="text-gray-500" dir="ltr">${date}</span>` : ''}
-                        </div>
-                        <p class="text-sm text-gray-700 leading-relaxed text-justify">${desc}</p>
-                    `;
+                    div.innerHTML = `<h4 class="font-bold text-gray-900 text-lg leading-tight">${title}</h4><div class="flex items-center gap-2 mb-2 text-sm"><span class="font-bold text-gray-800">${company}</span>${date ? `<span class="text-gray-400">|</span> <span class="text-gray-500" dir="ltr">${date}</span>` : ''}</div><p class="text-sm text-gray-700 leading-relaxed text-justify">${desc}</p>`;
                     outContainer.appendChild(div);
                 }
             });
@@ -961,14 +788,7 @@
             const div = document.createElement('div');
             div.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200 edu-item mb-3 shadow-sm cv-entry-item';
             div.dataset.id = data.id;
-            div.innerHTML = `
-                ${getControlsHTML()}
-                <input type="text" class="edu-degree w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="${t.phEduDegree}" value="${data.degree}" oninput="updateCV()">
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" class="edu-inst w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm font-bold text-gray-600" placeholder="${t.phEduInst}" value="${data.institution}" oninput="updateCV()">
-                    <input type="text" class="edu-date w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="${t.phEduDate}" value="${data.date}" oninput="updateCV()">
-                </div>
-            `;
+            div.innerHTML = `${getControlsHTML()}<input type="text" class="edu-degree w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="${t.phEduDegree}" value="${data.degree}" oninput="updateCV()"><div class="grid grid-cols-2 gap-2"><input type="text" class="edu-inst w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm font-bold text-gray-600" placeholder="${t.phEduInst}" value="${data.institution}" oninput="updateCV()"><input type="text" class="edu-date w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="${t.phEduDate}" value="${data.date}" oninput="updateCV()"></div>`;
             document.getElementById('education-list').appendChild(div);
         }
         function addEducation() { renderEducationInput(); updateCV(); }
@@ -983,11 +803,7 @@
                 if(degree || inst) {
                     const div = document.createElement('div');
                     div.className = 'item mb-3';
-                    div.innerHTML = `
-                        <h4 class="font-bold text-gray-800 text-sm">${degree}</h4>
-                        <h5 class="text-sm font-bold text-gray-800 my-0.5">${inst}</h5>
-                        ${date ? `<span class="text-xs text-gray-500" dir="ltr">${date}</span>` : ''}
-                    `;
+                    div.innerHTML = `<h4 class="font-bold text-gray-800 text-sm">${degree}</h4><h5 class="text-sm font-bold text-gray-800 my-0.5">${inst}</h5>${date ? `<span class="text-xs text-gray-500" dir="ltr">${date}</span>` : ''}`;
                     outContainer.appendChild(div);
                 }
             });
@@ -998,15 +814,7 @@
             const div = document.createElement('div');
             div.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200 cert-item mb-3 shadow-sm cv-entry-item';
             div.dataset.id = data.id;
-            div.innerHTML = `
-                ${getControlsHTML()}
-                <input type="text" class="cert-name w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="${t.phCertName}" value="${data.name || ''}" oninput="updateCV()">
-                <input type="text" class="cert-issuer w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm text-gray-600 font-bold" placeholder="${t.phCertIssuer}" value="${data.issuer || ''}" oninput="updateCV()">
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" class="cert-month w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="${t.phCertMonth}" value="${data.month || ''}" oninput="updateCV()">
-                    <input type="text" class="cert-date w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="${t.phCertDate}" value="${data.date || ''}" oninput="updateCV()">
-                </div>
-            `;
+            div.innerHTML = `${getControlsHTML()}<input type="text" class="cert-name w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="${t.phCertName}" value="${data.name || ''}" oninput="updateCV()"><input type="text" class="cert-issuer w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm text-gray-600 font-bold" placeholder="${t.phCertIssuer}" value="${data.issuer || ''}" oninput="updateCV()"><div class="grid grid-cols-2 gap-2"><input type="text" class="cert-month w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="${t.phCertMonth}" value="${data.month || ''}" oninput="updateCV()"><input type="text" class="cert-date w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="${t.phCertDate}" value="${data.date || ''}" oninput="updateCV()"></div>`;
             document.getElementById('certification-list').appendChild(div);
         }
         function addCertification() { renderCertificationInput(); updateCV(); }
@@ -1021,13 +829,7 @@
                 if(name || issuer) {
                     const div = document.createElement('div');
                     div.className = 'item mb-2';
-                    div.innerHTML = `
-                        <h4 class="font-bold text-gray-800 text-sm">${name}</h4>
-                        <div class="flex items-center gap-2">
-                            <h5 class="text-xs font-bold text-gray-800">${issuer}</h5>
-                            ${dateDisplay ? `<span class="text-gray-400 text-xs">|</span> <span class="text-xs text-gray-500" dir="ltr">${dateDisplay}</span>` : ''}
-                        </div>
-                    `;
+                    div.innerHTML = `<h4 class="font-bold text-gray-800 text-sm">${name}</h4><div class="flex items-center gap-2"><h5 class="text-xs font-bold text-gray-800">${issuer}</h5>${dateDisplay ? `<span class="text-gray-400 text-xs">|</span> <span class="text-xs text-gray-500" dir="ltr">${dateDisplay}</span>` : ''}</div>`;
                     outContainer.appendChild(div);
                 }
             });
@@ -1038,13 +840,7 @@
             const div = document.createElement('div');
             div.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200 lang-item mb-3 shadow-sm cv-entry-item';
             div.dataset.id = data.id;
-            div.innerHTML = `
-                ${getControlsHTML()}
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" class="lang-name w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="${t.phLangName}" value="${data.name}" oninput="updateCV()">
-                    <input type="text" class="lang-level w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="${t.phLangLevel}" value="${data.level}" oninput="updateCV()">
-                </div>
-            `;
+            div.innerHTML = `${getControlsHTML()}<div class="grid grid-cols-2 gap-2"><input type="text" class="lang-name w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="${t.phLangName}" value="${data.name}" oninput="updateCV()"><input type="text" class="lang-level w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="${t.phLangLevel}" value="${data.level}" oninput="updateCV()"></div>`;
             document.getElementById('language-list').appendChild(div);
         }
         function addLanguage() { renderLanguageInput(); updateCV(); }
@@ -1069,26 +865,11 @@
             const div = document.createElement('div');
             div.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200 custom-item mb-3 shadow-sm cv-entry-item';
             div.dataset.id = data.id;
-            div.innerHTML = `
-                ${getControlsHTML()}
-                <input type="text" class="custom-title w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm font-bold" placeholder="${t.phCustomTitle}" value="${data.title}" oninput="updateCV()">
-                <select class="custom-pos w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm bg-white" onchange="updateCV()">
-                    <option value="5" data-i18n="posBeforeSum" ${data.pos === 5 ? 'selected' : ''}>${t.posBeforeSum || 'Before Summary'}</option>
-                    <option value="15" data-i18n="posAfterSum" ${data.pos === 15 ? 'selected' : ''}>${t.posAfterSum || 'After Summary'}</option>
-                    <option value="25" data-i18n="posAfterExp" ${data.pos === 25 ? 'selected' : ''}>${t.posAfterExp || 'After Experience'}</option>
-                    <option value="35" data-i18n="posAfterEdu" ${data.pos === 35 ? 'selected' : ''}>${t.posAfterEdu || 'After Education'}</option>
-                    <option value="45" data-i18n="posAfterCert" ${data.pos === 45 ? 'selected' : ''}>${t.posAfterCert || 'After Certifications'}</option>
-                    <option value="55" data-i18n="posAfterSkills" ${data.pos === 55 ? 'selected' : ''}>${t.posAfterSkills || 'After Skills'}</option>
-                    <option value="65" data-i18n="posAfterLang" ${data.pos === 65 ? 'selected' : ''}>${t.posAfterLang || 'After Languages'}</option>
-                    <option value="100" data-i18n="posEnd" ${data.pos === 100 ? 'selected' : ''}>${t.posEnd || 'At the End'}</option>
-                </select>
-                <textarea class="custom-content w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm h-24" placeholder="${t.phCustomContent}" oninput="updateCV()">${data.content}</textarea>
-            `;
+            div.innerHTML = `${getControlsHTML()}<input type="text" class="custom-title w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm font-bold" placeholder="${t.phCustomTitle}" value="${data.title}" oninput="updateCV()"><select class="custom-pos w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm bg-white" onchange="updateCV()"><option value="5" data-i18n="posBeforeSum" ${data.pos === 5 ? 'selected' : ''}>${t.posBeforeSum || 'Before Summary'}</option><option value="15" data-i18n="posAfterSum" ${data.pos === 15 ? 'selected' : ''}>${t.posAfterSum || 'After Summary'}</option><option value="25" data-i18n="posAfterExp" ${data.pos === 25 ? 'selected' : ''}>${t.posAfterExp || 'After Experience'}</option><option value="35" data-i18n="posAfterEdu" ${data.pos === 35 ? 'selected' : ''}>${t.posAfterEdu || 'After Education'}</option><option value="45" data-i18n="posAfterCert" ${data.pos === 45 ? 'selected' : ''}>${t.posAfterCert || 'After Certifications'}</option><option value="55" data-i18n="posAfterSkills" ${data.pos === 55 ? 'selected' : ''}>${t.posAfterSkills || 'After Skills'}</option><option value="65" data-i18n="posAfterLang" ${data.pos === 65 ? 'selected' : ''}>${t.posAfterLang || 'After Languages'}</option><option value="100" data-i18n="posEnd" ${data.pos === 100 ? 'selected' : ''}>${t.posEnd || 'At the End'}</option></select><textarea class="custom-content w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm h-24" placeholder="${t.phCustomContent}" oninput="updateCV()">${data.content}</textarea>`;
             document.getElementById('custom-section-list').appendChild(div);
         }
         function addCustomSection() { renderCustomInput(); updateCV(); }
 
-        /* --- Download Handlers --- */
         function toggleDownloadMenu() {
             document.getElementById('download-menu').classList.toggle('hidden');
         }
@@ -1102,20 +883,36 @@
             document.getElementById('download-menu').classList.add('hidden');
             const content = document.getElementById('cv-render-target').cloneNode(true);
             
-            // إزالة الكلاسات المخصصة للظل والأيقونات (SVG) من الوورد لأنها تسبب فوضى
             content.querySelectorAll('.shadow-lg').forEach(el => el.classList.remove('shadow-lg'));
             content.querySelectorAll('svg').forEach(svg => svg.remove());
-            
-            // إزالة أي عناصر تم إخفاؤها تماماً (مثل الروابط الفارغة)
             content.querySelectorAll('[style*="display: none"]').forEach(el => el.remove());
             
+            const cvData = {
+                docType: document.getElementById('inp-doc-type').value,
+                template: document.getElementById('inp-template').value,
+                personal: {
+                    name: document.getElementById('inp-name').value, title: document.getElementById('inp-title').value,
+                    email: document.getElementById('inp-email').value, phone: document.getElementById('inp-phone').value,
+                    address: document.getElementById('inp-address').value, summary: document.getElementById('inp-summary').value,
+                    linkedinUrl: document.getElementById('inp-linkedin-url').value, linkedinText: document.getElementById('inp-linkedin-text').value,
+                    githubUrl: document.getElementById('inp-github-url').value, githubText: document.getElementById('inp-github-text').value,
+                    portfolioUrl: document.getElementById('inp-portfolio-url').value, portfolioText: document.getElementById('inp-portfolio-text').value
+                },
+                skills: { hard: document.getElementById('inp-hard-skills').value, soft: document.getElementById('inp-soft-skills').value },
+                experience: Array.from(document.querySelectorAll('.exp-item')).map(item => ({ title: item.querySelector('.exp-title').value, company: item.querySelector('.exp-company').value, date: item.querySelector('.exp-date').value, desc: item.querySelector('.exp-desc').value })),
+                education: Array.from(document.querySelectorAll('.edu-item')).map(item => ({ degree: item.querySelector('.edu-degree').value, institution: item.querySelector('.edu-inst').value, date: item.querySelector('.edu-date').value })),
+                certifications: Array.from(document.querySelectorAll('.cert-item')).map(item => ({ name: item.querySelector('.cert-name').value, issuer: item.querySelector('.cert-issuer').value, month: item.querySelector('.cert-month').value, date: item.querySelector('.cert-date').value })),
+                languages: Array.from(document.querySelectorAll('.lang-item')).map(item => ({ name: item.querySelector('.lang-name').value, level: item.querySelector('.lang-level').value })),
+                custom: Array.from(document.querySelectorAll('.custom-item')).map(item => ({ title: item.querySelector('.custom-title').value, pos: parseInt(item.querySelector('.custom-pos').value) || 100, content: item.querySelector('.custom-content').value }))
+            };
+            const metadataString = JSON.stringify(cvData).replace(/</g, '\\u003c');
+
             const html = `
                 <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40' dir="${currentLang === 'ar' ? 'rtl' : 'ltr'}">
                 <head>
                     <meta charset='utf-8'>
                     <title>${document.getElementById('inp-name').value || 'CV'}</title>
                     <style>
-                        /* إضافة CSS متوافق مع Word لتحسين مظهر الملف المستخرج */
                         body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #333; }
                         h1 { font-size: 24pt; font-weight: bold; color: #111; margin-bottom: 5px; }
                         h2 { font-size: 14pt; color: #555; margin-bottom: 15px; }
@@ -1132,6 +929,8 @@
                     </style>
                 </head>
                 <body>
+                    <!-- Hidden Metadata for Import -->
+                    <div id="cv-maker-metadata" style="display:none;">${metadataString}</div>
                     ${content.innerHTML}
                 </body>
                 </html>
@@ -1147,7 +946,6 @@
             document.body.removeChild(link);
         }
 
-        // إغلاق القائمة عند النقر خارجها
         document.addEventListener('click', function(event) {
             const menu = document.getElementById('download-menu');
             if(menu) {
@@ -1158,6 +956,84 @@
             }
         });
 
+        function showToast(message, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `px-4 py-3 rounded shadow-lg text-white text-sm font-bold transition-all duration-300 transform translate-y-4 opacity-0 ${isError ? 'bg-red-600' : 'bg-green-600'}`;
+            toast.innerText = message;
+            container.appendChild(toast);
+            
+            requestAnimationFrame(() => toast.classList.remove('translate-y-4', 'opacity-0'));
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function importWord(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const match = text.match(/<div id="cv-maker-metadata" style="display:none;">(.*?)<\/div>/s);
+                
+                if (match && match[1]) {
+                    try {
+                        const data = JSON.parse(match[1]);
+                        loadCVData(data);
+                        showToast(translations[currentLang].importSuccess, false);
+                    } catch (err) {
+                        showToast(translations[currentLang].importError, true);
+                    }
+                } else {
+                    showToast(translations[currentLang].importError, true);
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function loadCVData(data) {
+            if(data.docType) document.getElementById('inp-doc-type').value = data.docType;
+            if(data.template) document.getElementById('inp-template').value = data.template;
+
+            if(data.personal) {
+                document.getElementById('inp-name').value = data.personal.name || '';
+                document.getElementById('inp-title').value = data.personal.title || '';
+                document.getElementById('inp-email').value = data.personal.email || '';
+                document.getElementById('inp-phone').value = data.personal.phone || '';
+                document.getElementById('inp-address').value = data.personal.address || '';
+                document.getElementById('inp-summary').value = data.personal.summary || '';
+                document.getElementById('inp-linkedin-url').value = data.personal.linkedinUrl || '';
+                document.getElementById('inp-linkedin-text').value = data.personal.linkedinText || '';
+                document.getElementById('inp-github-url').value = data.personal.githubUrl || '';
+                document.getElementById('inp-github-text').value = data.personal.githubText || '';
+                document.getElementById('inp-portfolio-url').value = data.personal.portfolioUrl || '';
+                document.getElementById('inp-portfolio-text').value = data.personal.portfolioText || '';
+            }
+
+            if(data.skills) {
+                document.getElementById('inp-hard-skills').value = data.skills.hard || '';
+                document.getElementById('inp-soft-skills').value = data.skills.soft || '';
+            }
+
+            const renderList = (listId, dataArray, renderFn) => {
+                document.getElementById(listId).innerHTML = '';
+                if(dataArray && dataArray.length > 0) {
+                    dataArray.forEach(item => { item.id = generateId(); renderFn(item); });
+                }
+            };
+
+            renderList('experience-list', data.experience, renderExperienceInput);
+            renderList('education-list', data.education, renderEducationInput);
+            renderList('certification-list', data.certifications, renderCertificationInput);
+            renderList('language-list', data.languages, renderLanguageInput);
+            renderList('custom-section-list', data.custom, renderCustomInput);
+
+            updateCV();
+        }
     </script>
 </body>
 </html>

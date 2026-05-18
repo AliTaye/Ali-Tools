@@ -154,6 +154,11 @@
                 <i class="fa-solid fa-expand"></i>
             </button>
 
+            <!-- زر التراجع العائم -->
+            <button id="undoBtn" onclick="undoLastAction()" class="hidden absolute bottom-4 left-20 z-10 bg-white p-3 rounded-full shadow-lg text-gray-700 hover:text-orange-500 hover:bg-orange-50 border border-gray-200 transition-all transform hover:scale-110" title="تراجع (Undo)">
+                <i class="fa-solid fa-rotate-left"></i>
+            </button>
+
             <div id="mynetwork"></div>
         </div>
         
@@ -174,7 +179,7 @@
         //  🚨 لحل المشكلة للأبد: ضع مفتاحك هنا 🚨
         // ==========================================
         // تم مسح مفتاحك الخاص من هنا لأسباب أمنية. انسخ الكود وضع مفتاحك مجدداً بين علامتي التنصيص.
-        const apiKey = "AIzaSyCTecovTPt5crMJ3WyF6FWxbCOKQK52oWk"; 
+        const apiKey = ""; 
         
         // --- State ---
         let network = null;
@@ -183,6 +188,8 @@
         let editingNodeId = null; 
         let selectedNodeId = null; 
         let attachedText = ""; 
+        let historyStack = [];
+        let dragStartPositions = {};
 
         // قراءة الملف المرفق (نص أو وورد)
         document.getElementById('fileAttachment').addEventListener('change', function(e) {
@@ -220,6 +227,44 @@
                 document.getElementById('attachmentStatus').classList.add('hidden');
             }
         });
+
+        // --- نظام التراجع (Undo System) ---
+        function pushHistory(action) {
+            historyStack.push(action);
+            if (historyStack.length > 20) historyStack.shift(); // الاحتفاظ بآخر 20 عملية فقط
+            document.getElementById('undoBtn').classList.remove('hidden');
+        }
+
+        function undoLastAction() {
+            if (historyStack.length === 0) return;
+            const action = historyStack.pop();
+
+            if (action.type === 'ADD') {
+                if (nodesDataset.get(action.data.nodeId)) {
+                    nodesDataset.remove(action.data.nodeId); // إزالة العنصر المضاف (يقوم vis.js بحذف الروابط تلقائياً)
+                }
+            } else if (action.type === 'DELETE') {
+                nodesDataset.add(action.data.nodes); // استعادة العناصر مع إحداثياتها
+                edgesDataset.add(action.data.edges); // استعادة الروابط
+            } else if (action.type === 'EDIT') {
+                nodesDataset.update({ id: action.data.nodeId, label: action.data.oldLabel }); // استعادة النص القديم
+            } else if (action.type === 'MOVE') {
+                action.data.moves.forEach(m => {
+                    network.moveNode(m.id, m.oldX, m.oldY); // استعادة المكان القديم
+                    nodesDataset.update({id: m.id, x: m.oldX, y: m.oldY}); // تحديث قاعدة البيانات
+                });
+            }
+
+            // إخفاء الزر إذا كان السجل فارغاً
+            if (historyStack.length === 0) {
+                document.getElementById('undoBtn').classList.add('hidden');
+            }
+            
+            // إلغاء التحديد بعد التراجع لتجنب أخطاء الواجهة
+            network.unselectAll();
+            document.getElementById('nodeToolbar').classList.add('hidden');
+            selectedNodeId = null;
+        }
 
         // Helper: Exponential Backoff Fetch
         async function fetchWithRetry(url, options, maxRetries = 5) {
@@ -301,6 +346,35 @@
                     openEditModalFromToolbar();
                 }
             });
+
+            // تسجيل بدء السحب للتراجع عن الحركة
+            network.on("dragStart", function (params) {
+                if (params.nodes.length > 0) {
+                    dragStartPositions = network.getPositions(params.nodes);
+                }
+            });
+
+            // تسجيل انتهاء السحب لحفظ العملية في السجل
+            network.on("dragEnd", function (params) {
+                if (params.nodes.length > 0) {
+                    const newPositions = network.getPositions(params.nodes);
+                    const moves = [];
+                    for (let id of params.nodes) {
+                        if (dragStartPositions[id] && (dragStartPositions[id].x !== newPositions[id].x || dragStartPositions[id].y !== newPositions[id].y)) {
+                            moves.push({
+                                id: id,
+                                oldX: dragStartPositions[id].x,
+                                oldY: dragStartPositions[id].y,
+                                newX: newPositions[id].x,
+                                newY: newPositions[id].y
+                            });
+                        }
+                    }
+                    if (moves.length > 0) {
+                        pushHistory({ type: 'MOVE', data: { moves: moves } });
+                    }
+                }
+            });
         }
 
         function getNodeStyle(level) {
@@ -376,6 +450,10 @@
                 }
             }
 
+            // مسح سجل التراجع عند إنشاء خريطة جديدة
+            historyStack = [];
+            document.getElementById('undoBtn').classList.add('hidden');
+
             const topic = document.getElementById('topicInput').value.trim();
             if (!topic && !attachedText) {
                 showMessage('الرجاء إدخال موضوع أو إرفاق ملف!', true);
@@ -440,10 +518,16 @@
                     edgesDataset.add({ from: selectedNodeId, to: newId });
                     closeAddNodeModal();
                     
+                    // حفظ عملية الإضافة في سجل التراجع
+                    pushHistory({ type: 'ADD', data: { nodeId: newId } });
+                    
                     try {
                         showMessage('جاري رسم صورة للعنصر الجديد...', false);
                         const img = await fetchImageForNode(newLabel);
-                        if(img) nodesDataset.update({ id: newId, shape: 'circularImage', image: img, size: 40, font: { size: 16, color: '#1f2937', background: 'rgba(255,255,255,0.8)' } });
+                        // تأكد أن العنصر لم يتم حذفه بالتراجع قبل اكتمال تحميل الصورة
+                        if(img && nodesDataset.get(newId)) { 
+                            nodesDataset.update({ id: newId, shape: 'circularImage', image: img, size: 40, font: { size: 16, color: '#1f2937', background: 'rgba(255,255,255,0.8)' } });
+                        }
                     } catch(e) { console.error(e); }
                 }
             }
@@ -464,6 +548,20 @@
                     });
                 }
                 findChildren(selectedNodeId);
+                
+                // حفظ البيانات للتراجع (المواقع والعناصر والروابط)
+                const positions = network.getPositions(nodesToRemove);
+                const nodesToRestore = nodesToRemove.map(id => {
+                    let node = nodesDataset.get(id);
+                    // حفظ الإحداثيات ليعود العنصر لنفس مكانه
+                    if (positions[id]) { node.x = positions[id].x; node.y = positions[id].y; }
+                    return node;
+                });
+                const edgesToRestore = edgesDataset.get({ filter: item => nodesToRemove.includes(item.from) || nodesToRemove.includes(item.to) });
+                
+                // إضافة العملية للسجل
+                pushHistory({ type: 'DELETE', data: { nodes: nodesToRestore, edges: edgesToRestore } });
+
                 nodesDataset.remove(nodesToRemove);
                 document.getElementById('nodeToolbar').classList.add('hidden');
                 selectedNodeId = null;
@@ -485,7 +583,13 @@
         function saveNodeEdit() {
             if (editingNodeId !== null) {
                 const newLabel = document.getElementById('editNodeInput').value.trim();
-                if (newLabel !== "") nodesDataset.update({ id: editingNodeId, label: newLabel });
+                if (newLabel !== "") {
+                    // حفظ عملية التعديل في سجل التراجع
+                    const oldNode = nodesDataset.get(editingNodeId);
+                    pushHistory({ type: 'EDIT', data: { nodeId: editingNodeId, oldLabel: oldNode.label, newLabel: newLabel } });
+                    
+                    nodesDataset.update({ id: editingNodeId, label: newLabel });
+                }
                 closeEditModal();
             }
         }

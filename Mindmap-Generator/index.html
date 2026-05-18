@@ -173,7 +173,8 @@
         // ==========================================
         //  🚨 لحل المشكلة للأبد: ضع مفتاحك هنا 🚨
         // ==========================================
-        const apiKey = "AIzaSyCTecovTPt5crMJ3WyF6FWxbCOKQK52oWk"; // استبدل هذه الجملة بالمفتاح الحقيقي
+        // تم مسح مفتاحك الخاص من هنا لأسباب أمنية. انسخ الكود وضع مفتاحك مجدداً بين علامتي التنصيص.
+        const apiKey = "AIzaSyCTecovTPt5crMJ3WyF6FWxbCOKQK52oWk"; 
         
         // --- State ---
         let network = null;
@@ -313,7 +314,9 @@
 
         // AI API Calls
         async function fetchMindMapStructure(topic) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            // اختيار النموذج بذكاء: إذا وضع المستخدم مفتاحه الخاص، نستخدم النماذج العامة لتجنب خطأ 404
+            const textModel = apiKey ? "gemini-1.5-flash" : "gemini-2.5-flash-preview-09-2025";
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${textModel}:generateContent?key=${apiKey}`;
             
             let promptText = `
                 أريد إنشاء خريطة ذهنية مفصلة ومنظمة عن الموضوع التالي: "${topic}".
@@ -344,15 +347,19 @@
             const data = await fetchWithRetry(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             
             if (!data || !data.candidates || data.candidates.length === 0) {
-                throw new Error("تأكد من صحة مفتاح API Key. الخادم رفض الطلب (403).");
+                throw new Error("تأكد من صحة مفتاح API Key. الخادم رفض الطلب (403 أو 404).");
             }
             return JSON.parse(data.candidates[0].content.parts[0].text);
         }
 
         async function fetchImageForNode(label) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+            // اختيار نموذج الصور بذكاء لتجنب خطأ 404 مع المفاتيح الشخصية
+            const imageModel = apiKey ? "imagen-3.0-generate-001" : "imagen-4.0-generate-001";
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${imageModel}:predict?key=${apiKey}`;
+            
             const promptText = `A very simple, minimal line art doodle icon illustrating "${label}", transparent or white background, vector style icon, flat colors, child-like drawing style, educational context.`;
             const payload = { instances: { prompt: promptText }, parameters: { sampleCount: 1 } };
+            
             const data = await fetchWithRetry(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (data && data.predictions && data.predictions.length > 0) {
                 return `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`;
@@ -361,13 +368,12 @@
         }
 
         async function generateMindMap() {
-            // فحص وجود المفتاح
-            let currentKey = apiKey;
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                 // Ignore this block when outside platform
-            } else if (!apiKey || apiKey === "ضع_مفتاحك_هنا") {
-                showMessage('🚨 خطأ: يجب عليك وضع مفتاح API الخاص بك في الكود (السطر 134) لكي يعمل التطبيق.', true);
-                return;
+            // التحقق من المفتاح في بيئة المستخدم المحلية
+            if (typeof __initial_auth_token === 'undefined' || !__initial_auth_token) {
+                if (!apiKey) {
+                    showMessage('🚨 خطأ: بما أنك تستخدم البرنامج خارج المنصة، يجب عليك وضع مفتاح API الخاص بك في الكود (السطر 134).', true);
+                    return;
+                }
             }
 
             const topic = document.getElementById('topicInput').value.trim();
